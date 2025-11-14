@@ -112,10 +112,11 @@ export async function getUserDailyStats(
 }
 
 /**
- * 3. 히스토리 검색 (title 기반)
+ * 3. 히스토리 검색 (title + summary/content 기반)
  * ✅ 서브컬렉션 구조: /users/{userId}/history
  * - deletedAt이 null인 문서만
  * - 대소문자 구분 없는 검색 (클라이언트에서 필터링)
+ * - ✅ summary 또는 content 필드 모두 검색
  */
 export async function searchHistory(
   userId: string,
@@ -145,7 +146,7 @@ export async function searchHistory(
 
     const snapshot = await query.limit(100).get(); // 충분한 데이터 가져오기
 
-    // 클라이언트 사이드 필터링
+    // ✅ 클라이언트 사이드 필터링 (summary와 content 모두 검색)
     const searchLower = searchTerm.toLowerCase();
     const filtered = snapshot.docs
       .map((doc) => ({
@@ -153,7 +154,13 @@ export async function searchHistory(
         doc: doc,
         ...(doc.data() as HistoryDocument),
       }))
-      .filter((item) => item.title.toLowerCase().includes(searchLower));
+      .filter((item) => {
+        const summaryContent = item.summary || item.content || '';
+        return (
+          item.title.toLowerCase().includes(searchLower) ||
+          summaryContent.toLowerCase().includes(searchLower)
+        );
+      });
 
     const hasMore = filtered.length > limit;
     const data = filtered.slice(0, limit);

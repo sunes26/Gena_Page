@@ -1,7 +1,7 @@
 // app/(dashboard)/history/page.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHistory } from '@/hooks/useHistory';
 import { HistoryDocument } from '@/lib/firebase/types';
@@ -14,14 +14,12 @@ import { History, ArrowUpDown, Loader2 } from 'lucide-react';
 type SortOrder = 'desc' | 'asc';
 
 export default function HistoryPage() {
-  // ✅ AuthContext에서 user 가져오기
   const { user, loading: authLoading } = useAuth();
   const userId = user?.uid || null;
 
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [selectedItem, setSelectedItem] = useState<(HistoryDocument & { id: string }) | null>(null);
   
-  // ✅ userId 명시적으로 전달
   const {
     history,
     loading,
@@ -33,32 +31,14 @@ export default function HistoryPage() {
     isLoadingMore,
   } = useHistory(userId, { pageSize: 20 });
 
-  // 무한 스크롤 Intersection Observer
-  const observerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!observerRef.current || isLoadingMore || !hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(observerRef.current);
-
-    return () => observer.disconnect();
-  }, [loadMore, hasMore, isLoadingMore]);
-
-  // 정렬 처리
-  const sortedHistory = [...history].sort((a, b) => {
-    const timeA = a.createdAt.toMillis();
-    const timeB = b.createdAt.toMillis();
-    return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
-  });
+  // ✅ useMemo로 정렬 최적화 - 불필요한 재계산 방지
+  const sortedHistory = useMemo(() => {
+    return [...history].sort((a, b) => {
+      const timeA = a.createdAt.toMillis();
+      const timeB = b.createdAt.toMillis();
+      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+  }, [history, sortOrder]);
 
   // 검색 핸들러
   const handleSearch = (term: string) => {
@@ -167,16 +147,16 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {/* 히스토리 리스트 */}
+      {/* 히스토리 테이블 */}
       <HistoryTable
         history={sortedHistory}
         onView={setSelectedItem}
         loading={loading}
       />
 
-      {/* 무한 스크롤 트리거 */}
+      {/* ✅ 더 보기 버튼 - 버튼 클릭으로만 로딩 */}
       {hasMore && !loading && (
-        <div ref={observerRef} className="py-8 text-center">
+        <div className="py-8 text-center">
           {isLoadingMore ? (
             <div className="flex items-center justify-center space-x-2 text-gray-500">
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -185,7 +165,8 @@ export default function HistoryPage() {
           ) : (
             <button
               onClick={loadMore}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+              disabled={isLoadingMore}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               더 보기
             </button>

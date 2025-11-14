@@ -1,6 +1,7 @@
 // components/dashboard/HistoryTable.tsx
 'use client';
 
+import { memo, useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { FileText, Eye, ExternalLink } from 'lucide-react';
@@ -12,17 +13,39 @@ interface HistoryTableProps {
   loading?: boolean;
 }
 
-export default function HistoryTable({
+// ✅ summary 또는 content 가져오기 (summary 우선)
+const getSummaryContent = (item: HistoryDocument & { id: string }) => {
+  return item.summary || item.content || '';
+};
+
+// ✅ JavaScript로 화면 크기 감지하여 조건부 렌더링
+const HistoryTable = memo(function HistoryTable({
   history,
   onView,
   loading = false,
 }: HistoryTableProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // ✅ 화면 크기 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // 초기 체크
+    checkMobile();
+
+    // 리사이즈 이벤트 리스너
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // 로딩 스켈레톤
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        {/* 데스크톱 스켈레톤 */}
-        <div className="hidden md:block">
+        {!isMobile ? (
+          // 데스크톱 스켈레톤
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -59,25 +82,25 @@ export default function HistoryTable({
               ))}
             </tbody>
           </table>
-        </div>
-
-        {/* 모바일 스켈레톤 */}
-        <div className="md:hidden space-y-3 p-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="bg-white rounded-lg p-4 border border-gray-200 animate-pulse"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        ) : (
+          // 모바일 스켈레톤
+          <div className="space-y-3 p-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-lg p-4 border border-gray-200 animate-pulse"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -105,165 +128,162 @@ export default function HistoryTable({
     );
   }
 
+  // ✅ 조건부 렌더링: 하나만 렌더링
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      {/* 데스크톱 테이블 */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                제목
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                도메인
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                생성일
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                액션
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {history.map((item) => {
-              const timeAgo = formatDistanceToNow(item.createdAt.toDate(), {
-                addSuffix: true,
-                locale: ko,
-              });
+      {!isMobile ? (
+        // 데스크톱 테이블
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  제목
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  도메인
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  생성일
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  액션
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {history.map((item) => {
+                const timeAgo = formatDistanceToNow(item.createdAt.toDate(), {
+                  addSuffix: true,
+                  locale: ko,
+                });
+                const summaryContent = getSummaryContent(item);
 
-              return (
-                <tr
-                  key={item.id}
-                  className="hover:bg-gray-50 transition cursor-pointer"
-                  onClick={() => onView(item)}
-                >
-                  {/* 제목 */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition">
-                          {item.title || '제목 없음'}
-                        </div>
-                        {item.content && (
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {item.content.length}자
+                return (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-gray-50 transition cursor-pointer"
+                    onClick={() => onView(item)}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition">
+                            {item.title || '제목 없음'}
                           </div>
-                        )}
+                          {summaryContent && (
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {summaryContent.length}자
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
+                    <td className="px-6 py-4">
+                      {item.metadata?.domain ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {item.metadata.domain}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                      {timeAgo}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        {item.url && (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            title="원본 페이지 열기"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onView(item);
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          상세보기
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        // 모바일 카드
+        <div className="space-y-3 p-4">
+          {history.map((item) => {
+            const timeAgo = formatDistanceToNow(item.createdAt.toDate(), {
+              addSuffix: true,
+              locale: ko,
+            });
+            const summaryContent = getSummaryContent(item);
 
-                  {/* 도메인 */}
-                  <td className="px-6 py-4">
-                    {item.metadata?.domain ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            return (
+              <div
+                key={item.id}
+                onClick={() => onView(item)}
+                className="bg-white rounded-lg p-4 border border-gray-200 hover:border-blue-300 hover:shadow-md transition cursor-pointer"
+              >
+                <div className="flex items-start space-x-3 mb-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">
+                      {item.title || '제목 없음'}
+                    </h3>
+                    <div className="text-xs text-gray-500">{timeAgo}</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    {item.metadata?.domain && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {item.metadata.domain}
                       </span>
-                    ) : (
-                      <span className="text-sm text-gray-400">-</span>
                     )}
-                  </td>
-
-                  {/* 생성일 */}
-                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {timeAgo}
-                  </td>
-
-                  {/* 액션 */}
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      {item.url && (
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                          title="원본 페이지 열기"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onView(item);
-                        }}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        상세보기
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 모바일 카드 */}
-      <div className="md:hidden space-y-3 p-4">
-        {history.map((item) => {
-          const timeAgo = formatDistanceToNow(item.createdAt.toDate(), {
-            addSuffix: true,
-            locale: ko,
-          });
-
-          return (
-            <div
-              key={item.id}
-              onClick={() => onView(item)}
-              className="bg-white rounded-lg p-4 border border-gray-200 hover:border-blue-300 hover:shadow-md transition cursor-pointer"
-            >
-              {/* 헤더 */}
-              <div className="flex items-start space-x-3 mb-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">
-                    {item.title || '제목 없음'}
-                  </h3>
-                  <div className="text-xs text-gray-500">{timeAgo}</div>
+                    {summaryContent && (
+                      <span className="text-xs text-gray-500">
+                        {summaryContent.length}자
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onView(item);
+                    }}
+                    className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1" />
+                    보기
+                  </button>
                 </div>
               </div>
-
-              {/* 메타 정보 */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  {item.metadata?.domain && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {item.metadata.domain}
-                    </span>
-                  )}
-                  {item.content && (
-                    <span className="text-xs text-gray-500">
-                      {item.content.length}자
-                    </span>
-                  )}
-                </div>
-
-                {/* 액션 버튼 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onView(item);
-                  }}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                >
-                  <Eye className="w-3.5 h-3.5 mr-1" />
-                  보기
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
-}
+});
+
+HistoryTable.displayName = 'HistoryTable';
+
+export default HistoryTable;

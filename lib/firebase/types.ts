@@ -3,11 +3,15 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 /**
  * History 컬렉션 문서 타입
+ * ✅ Firebase에 summary로 저장되므로 summary 필드 추가
  */
 export interface HistoryDocument {
   userId: string;
   title: string;
   url?: string;
+  // ✅ Chrome 확장에서 summary로 저장
+  summary?: string;
+  // ✅ 하위 호환성을 위해 content도 지원
   content?: string;
   createdAt: Timestamp;
   deletedAt?: Timestamp | null;

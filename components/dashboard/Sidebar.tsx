@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { User } from 'firebase/auth';
 import {
   LayoutDashboard,
@@ -51,14 +51,17 @@ const navItems: NavItem[] = [
 
 export default function Sidebar({ user, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/login');
+      // ✅ window.location.href로 강제 전체 페이지 리로드
+      // router.push() 대신 사용하여 모든 상태를 깨끗하게 초기화
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
+      // 에러가 발생해도 메인 화면으로 이동
+      window.location.href = '/';
     }
   };
 
@@ -66,7 +69,7 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
       {/* 로고 영역 */}
       <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-        <Link href="/dashboard" className="flex items-center space-x-2">
+        <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/images/logo.png"
             alt="SummaryGenie"

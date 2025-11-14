@@ -12,6 +12,8 @@ import {
   limit,
   startAfter,
   getDocs,
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { getFirestoreInstance } from '@/lib/firebase/client';
 import { HistoryDocument } from '@/lib/firebase/types';
@@ -32,6 +34,13 @@ interface UseHistoryReturn {
   refresh: () => void;
 }
 
+// ✅ 페이지 데이터 타입 정의
+interface PageData {
+  data: (HistoryDocument & { id: string })[];
+  lastDoc: QueryDocumentSnapshot | null;
+  hasMore: boolean;
+}
+
 /**
  * 사용자의 요약 기록을 조회하는 훅 (무한 스크롤 지원)
  * ✅ 서브컬렉션 구조: /users/{userId}/history
@@ -44,44 +53,38 @@ export function useHistory(
   const [searchTerm, setSearchTerm] = useState('');
   const [domainFilter, setDomainFilter] = useState('');
 
-  // ✅ userId가 없으면 null 반환
-  const getKey = (pageIndex: number, previousPageData: any) => {
+  // ✅ getKey 함수 - 타입 명시
+  const getKey = (
+    pageIndex: number,
+    previousPageData: PageData | null
+  ): [string, string, string, string, number, number, string | null] | null => {
     if (!userId) return null;
 
-    if (previousPageData && previousPageData.data.length === 0) return null;
+    // 이전 페이지에 데이터가 없으면 더 이상 로드하지 않음
+    if (previousPageData && !previousPageData.hasMore) return null;
 
-    if (pageIndex === 0) {
-      return ['history', userId, searchTerm, domainFilter, pageSize];
-    }
+    // ✅ lastDoc의 ID를 키에 포함 (객체가 아닌 ID만)
+    const lastDocId = previousPageData?.lastDoc?.id || null;
 
-    return [
-      'history',
-      userId,
-      searchTerm,
-      domainFilter,
-      pageSize,
-      previousPageData.lastDoc,
-    ];
+    return ['history', userId, searchTerm, domainFilter, pageSize, pageIndex, lastDocId];
   };
 
-  // 데이터 가져오기 함수
-  const fetcher = async ([
-    _key,
-    uid,
-    search,
-    domain,
-    limitNum,
-    lastDoc,
-  ]: any) => {
+  // ✅ fetcher 함수 - 명시적 타입 지정
+  const fetcher = async (
+    key: [string, string, string, string, number, number, string | null],
+    previousPageData?: PageData
+  ): Promise<PageData> => {
+    const [_key, uid, search, domain, limitNum, pageIndex, lastDocId] = key;
+
     const db = getFirestoreInstance();
 
-    // ✅ 서브컬렉션 경로: /users/{userId}/history
+    // 서브컬렉션 경로: /users/{userId}/history
     const historyRef = collection(db, 'users', uid, 'history');
 
-    // ✅ userId 필터 제거 (이미 경로에 포함)
     let q = query(
       historyRef,
-      where('deletedAt', '==', null)
+      where('deletedAt', '==', null),
+      orderBy('createdAt', 'desc')
     );
 
     // 도메인 필터링
@@ -89,16 +92,18 @@ export function useHistory(
       q = query(q, where('metadata.domain', '==', domain));
     }
 
-    // 정렬 및 페이지네이션
-    q = query(q, orderBy('createdAt', 'desc'), limit(limitNum + 1));
-
-    if (lastDoc) {
-      q = query(q, startAfter(lastDoc));
+    // ✅ previousPageData에서 lastDoc 가져와서 페이지네이션
+    if (previousPageData?.lastDoc) {
+      q = query(q, startAfter(previousPageData.lastDoc));
     }
+
+    // limit + 1로 hasMore 확인
+    q = query(q, limit(limitNum + 1));
 
     const snapshot = await getDocs(q);
     const docs = snapshot.docs;
 
+    // hasMore 확인
     const hasMore = docs.length > limitNum;
     const actualDocs = docs.slice(0, limitNum);
 
@@ -107,32 +112,54 @@ export function useHistory(
       ...(doc.data() as HistoryDocument),
     }));
 
-    // 클라이언트 사이드 검색
+    // ✅ 클라이언트 사이드 검색 (summary와 content 모두 검색)
     if (search) {
       const searchLower = search.toLowerCase();
-      results = results.filter((item) =>
-        item.title.toLowerCase().includes(searchLower)
-      );
+      results = results.filter((item) => {
+        const summaryContent = item.summary || item.content || '';
+        return (
+          item.title.toLowerCase().includes(searchLower) ||
+          summaryContent.toLowerCase().includes(searchLower)
+        );
+      });
     }
 
     return {
       data: results,
-      lastDoc: hasMore ? actualDocs[actualDocs.length - 1] : null,
+      lastDoc: actualDocs.length > 0 ? actualDocs[actualDocs.length - 1] : null,
       hasMore,
     };
   };
 
-  const { data, error, size, setSize, isValidating, mutate } = useSWRInfinite(
+  // ✅ useSWRInfinite 설정
+  const { data, error, size, setSize, isValidating, mutate } = useSWRInfinite<
+    PageData,
+    Error
+  >(
     getKey,
-    fetcher,
+    (
+      key: [string, string, string, string, number, number, string | null],
+      previousPageData: PageData | undefined
+    ) => fetcher(key, previousPageData),
     {
       revalidateFirstPage: false,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+      dedupingInterval: 2000,
     }
   );
 
-  const history = data ? data.flatMap((page) => page.data) : [];
+  // ✅ 중복 제거 추가 - 명시적 타입 지정
+  const history: (HistoryDocument & { id: string })[] = data
+    ? Array.from(
+        new Map<string, HistoryDocument & { id: string }>(
+          data
+            .flatMap((page: PageData) => page.data)
+            .map((item: HistoryDocument & { id: string }) => [item.id, item])
+        ).values()
+      )
+    : [];
+
   const hasMore = Boolean(data && data[data.length - 1]?.hasMore);
   const loading = !data && !error;
   const isLoadingMore = Boolean(
@@ -145,15 +172,21 @@ export function useHistory(
     }
   }, [size, setSize, isLoadingMore, hasMore]);
 
-  const search = useCallback((term: string) => {
-    setSearchTerm(term);
-    setSize(1);
-  }, [setSize]);
+  const search = useCallback(
+    (term: string) => {
+      setSearchTerm(term);
+      setSize(1);
+    },
+    [setSize]
+  );
 
-  const filterByDomain = useCallback((domain: string) => {
-    setDomainFilter(domain);
-    setSize(1);
-  }, [setSize]);
+  const filterByDomain = useCallback(
+    (domain: string) => {
+      setDomainFilter(domain);
+      setSize(1);
+    },
+    [setSize]
+  );
 
   const refresh = useCallback(() => {
     mutate();
@@ -177,20 +210,16 @@ export function useHistory(
  * ✅ 서브컬렉션 구조: /users/{userId}/history
  */
 export function useHistoryCount(userId: string | null) {
-  const { data, error } = useSWR(
+  const { data, error } = useSWR<number, Error>(
     userId ? ['history-count', userId] : null,
     async () => {
       if (!userId) return 0;
 
       const db = getFirestoreInstance();
-      
-      // ✅ 서브컬렉션 경로
+
       const historyRef = collection(db, 'users', userId, 'history');
-      
-      const q = query(
-        historyRef,
-        where('deletedAt', '==', null)
-      );
+
+      const q = query(historyRef, where('deletedAt', '==', null));
 
       const snapshot = await getDocs(q);
       return snapshot.size;

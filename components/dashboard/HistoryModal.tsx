@@ -18,15 +18,23 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
 
   const isOpen = !!item;
 
+  // ✅ summary 또는 content 가져오기 (summary 우선)
+  const getSummaryContent = (item: HistoryDocument & { id: string }) => {
+    return item.summary || item.content || '';
+  };
+
   // 복사하기
   const handleCopy = async () => {
-    if (item?.content) {
-      try {
-        await navigator.clipboard.writeText(item.content);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (error) {
-        console.error('Failed to copy:', error);
+    if (item) {
+      const content = getSummaryContent(item);
+      if (content) {
+        try {
+          await navigator.clipboard.writeText(content);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch (error) {
+          console.error('Failed to copy:', error);
+        }
       }
     }
   };
@@ -34,6 +42,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
   if (!item) return null;
 
   const createdDate = format(item.createdAt.toDate(), 'PPP (EEE) p', { locale: ko });
+  const summaryContent = getSummaryContent(item);
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -98,9 +107,9 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                     )}
 
                     {/* 글자 수 */}
-                    {item.content && (
+                    {summaryContent && (
                       <div className="text-gray-500">
-                        {item.content.length.toLocaleString()}자
+                        {summaryContent.length.toLocaleString()}자
                       </div>
                     )}
                   </div>
@@ -127,10 +136,10 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                   )}
 
                   {/* 요약 내용 */}
-                  {item.content ? (
+                  {summaryContent ? (
                     <div className="prose prose-sm max-w-none">
                       <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                        {item.content}
+                        {summaryContent}
                       </div>
                     </div>
                   ) : (
@@ -161,7 +170,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                     {/* 복사 버튼 */}
                     <button
                       onClick={handleCopy}
-                      disabled={!item.content || copied}
+                      disabled={!summaryContent || copied}
                       className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition ${
                         copied
                           ? 'bg-green-100 text-green-700 cursor-default'

@@ -25,6 +25,9 @@ export interface HistoryItem {
   userId: string;
   title: string;
   url?: string;
+  // ✅ Firebase에 summary로 저장되므로 summary 필드 추가
+  summary?: string;
+  // ✅ 하위 호환성을 위해 content도 유지
   content?: string;
   createdAt: Timestamp;
   deletedAt?: Timestamp;
