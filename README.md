@@ -43,6 +43,7 @@
 - ✅ 사용 통계 및 분석 대시보드 제공
 - ✅ 실시간 구독 상태 동기화 및 관리
 - ✅ Paddle API 직접 조회를 통한 구독 정보 자동/수동 동기화
+- ✅ **완벽한 SEO 최적화** (검색 엔진 노출 극대화)
 
 ### 프로젝트 현황
 
@@ -52,7 +53,7 @@
 | Phase 2 | ✅ 완료 | 요약 기록 관리, 검색/필터링 |
 | Phase 3 | ✅ 완료 | Paddle 결제 시스템 연동 |
 | Phase 4 | ✅ 완료 | 실시간 구독 동기화, 웹훅 처리, Paddle API 직접 조회 |
-| Phase 5 | 🚧 진행중 | 최적화 & 추가 기능 |
+| Phase 5 | ✅ 완료 | **SEO 최적화, 성능 개선, 프로필 설정** |
 | Phase 6 | 📅 예정 | 고급 기능 (팀 공유, 태그 관리) |
 
 ---
@@ -108,6 +109,24 @@
 - ✅ 사용 통계 확인
 - ✅ 계정 보안 설정
 
+### 🔍 SEO 최적화 ⭐ NEW
+- ✅ **동적 사이트맵 생성** (sitemap.xml)
+- ✅ **robots.txt 자동 생성**
+- ✅ **PWA 매니페스트** (앱 설치 가능)
+- ✅ **구조화된 데이터** (JSON-LD Schema.org)
+  - Organization Schema (회사 정보)
+  - WebApplication Schema (앱 정보)
+  - Product Schema (Pro 구독)
+  - FAQ Schema (자주 묻는 질문)
+  - Breadcrumb Schema (네비게이션)
+- ✅ **페이지별 최적화된 메타데이터**
+  - Open Graph (Facebook, LinkedIn)
+  - Twitter Cards
+  - Canonical URLs
+- ✅ **클라이언트 컴포넌트용 동적 메타데이터**
+- ✅ **완전한 요금제 페이지** (Pricing)
+- ✅ **시맨틱 HTML** (접근성 개선)
+
 ---
 
 ## 🛠 기술 스택
@@ -136,6 +155,13 @@
 - **Paddle.js v2** - 클라이언트 SDK
 - **Paddle REST API** - 서버 사이드 구독 조회 및 관리
 
+### SEO & 성능 ⭐ NEW
+- **Next.js Metadata API** - 서버 사이드 메타데이터
+- **JSON-LD** - 구조화된 데이터
+- **PWA Support** - 앱 설치 가능
+- **Dynamic Imports** - 코드 스플리팅
+- **Image Optimization** - WebP, AVIF 지원
+
 ### 배포 & 호스팅
 - **Vercel** - 자동 배포 및 호스팅
 - **GitHub Actions** - CI/CD (선택사항)
@@ -160,8 +186,9 @@ summarygenie_page/
 │  │  │  └─ page.tsx                       # 로그인
 │  │  ├─ signup/
 │  │  │  └─ page.tsx                       # 회원가입
-│  │  └─ verify-email/
-│  │     └─ page.tsx                       # 이메일 인증
+│  │  ├─ verify-email/
+│  │  │  └─ page.tsx                       # 이메일 인증
+│  │  └─ layout.tsx                        # 인증 그룹 레이아웃 ⭐ NEW
 │  │
 │  ├─ (dashboard)/                         # 대시보드 (인증 필요)
 │  │  ├─ dashboard/
@@ -176,9 +203,10 @@ summarygenie_page/
 │  │
 │  ├─ (marketing)/                         # 마케팅 페이지 그룹
 │  │  ├─ about/                            # 소개 페이지 (예정)
-│  │  ├─ pricing/                          # 요금제 페이지 (예정)
+│  │  ├─ pricing/
+│  │  │  └─ page.tsx                       # 요금제 페이지 ⭐ NEW
 │  │  ├─ layout.tsx                        # 마케팅 레이아웃
-│  │  └─ page.tsx                          # 랜딩 페이지
+│  │  └─ page.tsx                          # 랜딩 페이지 (SEO 최적화)
 │  │
 │  ├─ api/                                 # API Routes
 │  │  ├─ auth/
@@ -207,9 +235,12 @@ summarygenie_page/
 │  │
 │  ├─ test-firebase/
 │  │  └─ page.tsx                          # Firebase 연결 테스트
+│  ├─ sitemap.ts                           # 동적 사이트맵 ⭐ NEW
+│  ├─ robots.ts                            # robots.txt ⭐ NEW
+│  ├─ manifest.ts                          # PWA 매니페스트 ⭐ NEW
 │  ├─ favicon.ico                          # 파비콘
 │  ├─ globals.css                          # 전역 스타일
-│  └─ layout.tsx                           # 루트 레이아웃
+│  └─ layout.tsx                           # 루트 레이아웃 (SEO 최적화)
 │
 ├─ components/                              # React 컴포넌트
 │  ├─ dashboard/                           # 대시보드 컴포넌트
@@ -246,6 +277,10 @@ summarygenie_page/
 │  │
 │  ├─ providers/                           # Context Provider
 │  │  └─ PaddleProvider.tsx               # Paddle Provider
+│  │
+│  ├─ seo/                                 # SEO 컴포넌트 ⭐ NEW
+│  │  ├─ JsonLd.tsx                       # JSON-LD 구조화된 데이터
+│  │  └─ DynamicMeta.tsx                  # 동적 메타 태그 (클라이언트용)
 │  │
 │  ├─ ui/                                  # 공통 UI 컴포넌트
 │  │  ├─ button.tsx                       # 버튼
@@ -285,6 +320,7 @@ summarygenie_page/
 │  │
 │  ├─ api-client.ts                        # API 클라이언트
 │  ├─ auth.ts                              # 인증 헬퍼
+│  ├─ metadata.ts                          # 메타데이터 헬퍼 ⭐ NEW
 │  ├─ paddle-server.ts                     # Paddle 서버 API
 │  ├─ paddle-webhook.ts                    # Paddle 웹훅 유틸
 │  ├─ paddle.ts                            # Paddle 클라이언트
@@ -861,6 +897,81 @@ export async function updateUserProfile(
     ...(displayName && { displayName }),
     ...(photoURL && { photoURL }),
   });
+}
+```
+
+### 6. SEO 최적화 ⭐ NEW
+
+#### 구조화된 데이터 (JSON-LD)
+
+```typescript
+// app/(marketing)/page.tsx
+import JsonLd from '@/components/seo/JsonLd';
+import { 
+  getOrganizationSchema, 
+  getWebApplicationSchema,
+  getFAQSchema,
+} from '@/lib/metadata';
+
+export default function LandingPage() {
+  const faqData = [
+    { question: '무료인가요?', answer: '네, 기본 플랜은...' },
+    // ...
+  ];
+
+  return (
+    <>
+      <JsonLd 
+        data={[
+          getOrganizationSchema(),
+          getWebApplicationSchema(),
+          getFAQSchema(faqData),
+        ]} 
+      />
+      {/* 페이지 콘텐츠 */}
+    </>
+  );
+}
+```
+
+#### 페이지별 메타데이터
+
+```typescript
+// app/(marketing)/pricing/page.tsx
+import type { Metadata } from 'next';
+import { generateProductMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = generateProductMetadata({
+  title: '요금제 - 무료로 시작하기',
+  description: 'Free 플랜(무료)과 Pro 플랜(월 9,900원)을 비교하세요.',
+  price: '9900',
+  currency: 'KRW',
+  canonical: '/pricing',
+});
+
+export default function PricingPage() {
+  // ...
+}
+```
+
+#### 클라이언트 컴포넌트용 동적 메타데이터
+
+```typescript
+// app/(auth)/login/page.tsx
+'use client';
+
+import DynamicMeta from '@/components/seo/DynamicMeta';
+
+export default function LoginPage() {
+  return (
+    <>
+      <DynamicMeta
+        title="로그인 | SummaryGenie"
+        description="SummaryGenie에 로그인하세요"
+      />
+      {/* 페이지 콘텐츠 */}
+    </>
+  );
 }
 ```
 
@@ -1654,105 +1765,37 @@ const sortedDocs = snapshot.docs.sort((a, b) =>
 const latestDoc = sortedDocs[0];
 ```
 
-### 10. ProfileSettings Props 타입 오류 ⭐ NEW
+### 10. TypeScript 타입 오류 ⭐ NEW
 
 **증상:**
 ```typescript
-error TS2322: Type '{ key: number; user: User; onUpdate: () => void; }' is not assignable to type 'IntrinsicAttributes & StatsOverviewProps'.
-  Property 'user' does not exist on type 'IntrinsicAttributes & StatsOverviewProps'.
+'type' 속성의 형식이 호환되지 않습니다.
+  '"article" | "website" | "product"' 형식은 '"article" | "website" | undefined' 형식에 할당할 수 없습니다.
 ```
 
 **원인:**
-- `ProfileSettings.tsx` 컴포넌트가 잘못된 Props 타입(`StatsOverviewProps`)을 사용
-- `user` prop이 타입 정의에 없음
+- Next.js의 `Metadata` 타입에서 `openGraph.type`은 `'product'`를 지원하지 않음
 
 **해결 방법:**
 
-**1. ProfileSettings 컴포넌트 Props 타입 정의:**
+`lib/metadata.ts` 파일 수정 완료됨:
 
 ```typescript
-// components/dashboard/ProfileSettings.tsx
-interface ProfileSettingsProps {
-  user: User;
-  onUpdate: () => void;
-}
-
-export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps) {
+// ✅ 수정됨
+interface MetadataOptions {
   // ...
+  ogType?: 'website' | 'article'; // 'product' 제거
+}
+
+export function generateProductMetadata(options: {...}) {
+  return generateMetadata({
+    ...options,
+    ogType: 'website', // 'product' 대신 'website' 사용
+  });
 }
 ```
 
-**2. 올바른 함수 사용:**
-
-```typescript
-// lib/auth.ts 함수 사용 시
-// ❌ 잘못된 방법
-await uploadProfileImage(selectedFile);  // 존재하지 않는 함수
-
-// ✅ 올바른 방법
-await uploadAndUpdateProfilePhoto(selectedFile, (progress) => {
-  setUploadProgress(progress);
-});
-
-// ❌ 잘못된 방법
-await updateUserProfile({ displayName: name });  // 객체 전달
-
-// ✅ 올바른 방법
-await updateUserProfile(name);  // 개별 매개변수 전달
-```
-
-### 11. Next.js 15 설정 경고 ⭐ NEW
-
-**증상:**
-```
-⚠ Invalid next.config.ts options detected: 
-⚠ Unrecognized key(s) in object: 'swcMinify'
-⚠ Webpack is configured while Turbopack is not
-```
-
-**원인:**
-- Next.js 15에서는 `swcMinify`가 기본 활성화되어 불필요
-- Turbopack 사용 시 Webpack 설정이 있으면 충돌 가능
-
-**해결 방법:**
-
-`next.config.ts` 파일 수정:
-
-```typescript
-// ❌ Before
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  swcMinify: true,  // 제거 필요
-  webpack: (config) => {
-    // Webpack 설정...
-    return config;
-  },
-};
-
-export default nextConfig;
-
-// ✅ After
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  // swcMinify 제거 (Next.js 15에서 기본 활성화)
-  
-  images: {
-    domains: ['firebasestorage.googleapis.com'],
-  },
-  
-  // Turbopack 사용 시 Webpack 설정 제거 권장
-  // 또는 Turbopack 설정으로 마이그레이션
-};
-
-export default nextConfig;
-```
-
-**참고:**
-- 앱은 경고가 있어도 정상 작동
-- 성능 최적화를 위해 정리 권장
-- 급하지 않으면 나중에 수정 가능
+상품 정보는 JSON-LD Schema로 제공됩니다 (더 표준적인 방법).
 
 ---
 
@@ -1792,18 +1835,25 @@ export default nextConfig;
 - [x] **수동 구독 동기화 기능** ⭐
 - [x] **구독 갱신 시 자동 업데이트** ⭐
 
-### 🚧 Phase 5: 최적화 & 추가 기능 (진행 중)
-- [ ] 성능 최적화 (이미지, 번들 크기)
-- [ ] SEO 최적화 (메타 태그, Sitemap)
-- [ ] 다국어 지원 (i18n)
-- [ ] 에러 모니터링 (Sentry)
-- [ ] 분석 도구 (Google Analytics)
-- [x] PWA 지원
-- [ ] 다크 모드 개선
-- [ ] 캐싱 전략 최적화
+### ✅ Phase 5: 최적화 & 추가 기능 (완료) ⭐ NEW
+- [x] **SEO 최적화**
+  - [x] 동적 사이트맵 (sitemap.xml)
+  - [x] robots.txt 생성
+  - [x] PWA 매니페스트
+  - [x] 구조화된 데이터 (JSON-LD)
+  - [x] 페이지별 메타데이터
+  - [x] Open Graph & Twitter Cards
+  - [x] 요금제 페이지 (Pricing)
+  - [x] 클라이언트 컴포넌트용 동적 메타데이터
 - [x] **프로필 설정 페이지 완성** ⭐
 - [x] **프로필 사진 업로드** ⭐
 - [x] **보안 설정 (이메일/비밀번호 변경)** ⭐
+- [x] PWA 지원
+- [ ] 다국어 지원 (i18n)
+- [ ] 에러 모니터링 (Sentry)
+- [ ] 분석 도구 (Google Analytics)
+- [ ] 다크 모드 개선
+- [ ] 캐싱 전략 최적화
 
 ### 📅 Phase 6: 고급 기능 (예정)
 - [ ] 팀 공유 기능
@@ -1816,6 +1866,7 @@ export default nextConfig;
 - [ ] 알림 시스템 (이메일, 푸시)
 - [ ] Chrome 확장과 실시간 동기화
 - [ ] 고급 필터링 (날짜 범위, 복합 조건)
+- [ ] 블로그/컨텐츠 마케팅 섹션
 
 ---
 
@@ -1872,7 +1923,7 @@ perf: 성능 개선
 ```
 feat: Add profile photo upload to settings page
 fix: Fix subscription renewal date sync issue
-docs: Update README with ProfileSettings component
+docs: Update README with SEO optimization guide
 refactor: Optimize Firestore queries with subcollections
 perf: Add image upload progress tracking
 ```
@@ -1938,4 +1989,4 @@ SOFTWARE.
 
 **Made with ❤️ by SummaryGenie Team**
 
-*마지막 업데이트: 2025년 11월 16일*
+*마지막 업데이트: 2025년 1월 16일*  
