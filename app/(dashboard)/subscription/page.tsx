@@ -9,10 +9,12 @@ import { useCurrentMonthlyUsage } from '@/hooks/useUsageStats';
 import { PaddleCheckout } from '@/components/payment/PaddleCheckout';
 import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast-helpers';
 import { getIdToken } from '@/lib/auth';
+import { RefreshCw } from 'lucide-react';
 
 /**
  * 구독 관리 페이지
  * ✅ users 컬렉션의 isPremium과 subscription 통합
+ * ✅ 수동 동기화 기능 추가
  */
 export default function SubscriptionPage() {
   const searchParams = useSearchParams();
@@ -35,6 +37,7 @@ export default function SubscriptionPage() {
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [canceling, setCanceling] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   const FREE_LIMIT = 30;
@@ -66,6 +69,49 @@ export default function SubscriptionPage() {
       return () => clearTimeout(timer);
     }
   }, [searchParams, showSuccessAlert, router]);
+
+  /**
+   * ✅ 구독 수동 동기화
+   */
+  const handleSyncSubscription = async () => {
+    setSyncing(true);
+    const toastId = showLoading('Paddle에서 구독 정보를 동기화하는 중...');
+
+    try {
+      const token = await getIdToken();
+      
+      if (!token) {
+        throw new Error('인증이 필요합니다.');
+      }
+
+      const response = await fetch('/api/subscription/sync', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '동기화에 실패했습니다.');
+      }
+
+      dismissToast(toastId);
+      showSuccess(data.message || '구독 정보가 동기화되었습니다.');
+
+      // 페이지 새로고침
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
+    } catch (error) {
+      dismissToast(toastId);
+      showError(error instanceof Error ? error.message : '동기화에 실패했습니다.');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   /**
    * 구독 취소
@@ -218,14 +264,45 @@ export default function SubscriptionPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">구독 관리</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">구독 관리</h1>
+        
+        {/* ✅ 수동 동기화 버튼 (Pro 플랜만) */}
+        {actualIsPremium && subscription && (
+          <button
+            onClick={handleSyncSubscription}
+            disabled={syncing}
+            className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Paddle에서 최신 구독 정보를 가져옵니다"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? '동기화 중...' : '구독 정보 동기화'}
+          </button>
+        )}
+      </div>
 
       {/* ✅ 불일치 경고 (디버그용) */}
       {isPremiumFromUsers !== isPro && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-yellow-800 text-sm">
-            ⚠️ 구독 상태 불일치: users.isPremium={String(isPremiumFromUsers)}, subscription.isPro={String(isPro)}
-          </p>
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-yellow-800 text-sm font-medium mb-2">
+                ⚠️ 구독 상태 불일치: users.isPremium={String(isPremiumFromUsers)}, subscription.isPro={String(isPro)}
+              </p>
+              <button
+                onClick={handleSyncSubscription}
+                disabled={syncing}
+                className="text-sm text-yellow-900 underline hover:no-underline disabled:opacity-50"
+              >
+                지금 동기화하기
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

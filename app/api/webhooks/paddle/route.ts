@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import crypto from 'crypto';
+import { getPaddleSubscription } from '@/lib/paddle-server';
 
 /**
  * Paddle 웹훅 시그니처 검증
@@ -165,6 +166,73 @@ async function updateDailyPremiumStatus(
 }
 
 /**
+ * ✅ Paddle API에서 최신 구독 정보를 가져와 Firestore 업데이트
+ */
+async function syncSubscriptionFromPaddle(
+  paddleSubscriptionId: string
+): Promise<void> {
+  try {
+    console.log(`🔄 Syncing subscription from Paddle: ${paddleSubscriptionId}`);
+    
+    // Paddle API에서 최신 구독 정보 가져오기
+    const paddleSubscription = await getPaddleSubscription(paddleSubscriptionId);
+    
+    const db = getAdminFirestore();
+    
+    // Firestore에서 구독 문서 찾기
+    const subscriptionsSnapshot = await db
+      .collection('subscription')
+      .where('paddleSubscriptionId', '==', paddleSubscriptionId)
+      .limit(1)
+      .get();
+
+    if (subscriptionsSnapshot.empty) {
+      console.warn(`Subscription not found in Firestore: ${paddleSubscriptionId}`);
+      return;
+    }
+
+    const subscriptionDoc = subscriptionsSnapshot.docs[0];
+    const userId = subscriptionDoc.data().userId;
+
+    // ✅ Firestore 업데이트
+    const updateData: any = {
+      status: paddleSubscription.status,
+      currentPeriodEnd: Timestamp.fromDate(
+        new Date(paddleSubscription.current_billing_period.ends_at)
+      ),
+      nextBillingDate: paddleSubscription.next_billed_at
+        ? Timestamp.fromDate(new Date(paddleSubscription.next_billed_at))
+        : null,
+      cancelAtPeriodEnd: paddleSubscription.scheduled_change?.action === 'cancel',
+      updatedAt: Timestamp.now(),
+    };
+
+    // 가격 정보가 있으면 업데이트
+    if (paddleSubscription.items && paddleSubscription.items.length > 0) {
+      const firstItem = paddleSubscription.items[0];
+      updateData.priceId = firstItem.price_id;
+    }
+
+    await subscriptionDoc.ref.update(updateData);
+
+    console.log(`✅ Subscription synced from Paddle: ${paddleSubscriptionId}`);
+    console.log(`   Current Period End: ${paddleSubscription.current_billing_period.ends_at}`);
+
+    // users 컬렉션도 업데이트
+    if (paddleSubscription.status === 'active' || paddleSubscription.status === 'trialing') {
+      await updateUserProfile(userId, {
+        isPremium: true,
+        subscriptionPlan: 'pro',
+      });
+      await updateDailyPremiumStatus(userId, true);
+    }
+  } catch (error) {
+    console.error('Failed to sync subscription from Paddle:', error);
+    throw error;
+  }
+}
+
+/**
  * subscription.created 이벤트 처리
  */
 async function handleSubscriptionCreated(data: any): Promise<void> {
@@ -246,6 +314,11 @@ async function handleSubscriptionUpdated(data: any): Promise<void> {
 
   await subscriptionDoc.ref.update(updateData);
 
+  console.log(`✅ Subscription updated: ${data.id}`);
+  console.log(`   Status: ${data.status}`);
+  console.log(`   Current Period End: ${data.current_billing_period.ends_at}`);
+  console.log(`   Next Billing Date: ${data.next_billed_at}`);
+
   // 2. ✅ users 컬렉션 업데이트 (상태에 따라)
   if (data.status === 'active' || data.status === 'trialing') {
     await updateUserProfile(userId, {
@@ -259,8 +332,6 @@ async function handleSubscriptionUpdated(data: any): Promise<void> {
     });
     await updateDailyPremiumStatus(userId, false);
   }
-
-  console.log(`✅ Subscription updated: ${data.id}`);
 }
 
 /**
@@ -411,7 +482,8 @@ async function handleSubscriptionResumed(data: any): Promise<void> {
 }
 
 /**
- * transaction.completed 이벤트 처리
+ * ✅ transaction.completed 이벤트 처리 (개선됨)
+ * 구독 갱신 결제 완료 시 Paddle API에서 최신 구독 정보를 가져와 동기화
  */
 async function handleTransactionCompleted(data: any): Promise<void> {
   const db = getAdminFirestore();
@@ -422,6 +494,7 @@ async function handleTransactionCompleted(data: any): Promise<void> {
     return;
   }
 
+  // 1. 결제 기록 저장
   const paymentData = {
     userId,
     transactionId: data.id,
@@ -438,6 +511,18 @@ async function handleTransactionCompleted(data: any): Promise<void> {
   await db.collection('payments').doc(data.id).set(paymentData);
 
   console.log(`✅ Transaction completed: ${data.id} for user ${userId}`);
+
+  // 2. ✅ 구독 관련 결제인 경우 Paddle API에서 최신 구독 정보 동기화
+  if (data.subscription_id) {
+    try {
+      console.log(`🔄 Syncing subscription after payment: ${data.subscription_id}`);
+      await syncSubscriptionFromPaddle(data.subscription_id);
+      console.log(`✅ Subscription synced successfully after payment`);
+    } catch (error) {
+      console.error('❌ Failed to sync subscription after payment:', error);
+      // 에러가 나도 계속 진행 (나중에 subscription.updated 이벤트로 복구됨)
+    }
+  }
 }
 
 /**

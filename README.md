@@ -42,6 +42,7 @@
 - ✅ **Paddle Billing**을 통한 프리미엄 구독 모델 수익화
 - ✅ 사용 통계 및 분석 대시보드 제공
 - ✅ 실시간 구독 상태 동기화 및 관리
+- ✅ Paddle API 직접 조회를 통한 구독 정보 자동/수동 동기화
 
 ### 프로젝트 현황
 
@@ -50,7 +51,7 @@
 | Phase 1 | ✅ 완료 | 프로젝트 기반 구축, Firebase 연동 |
 | Phase 2 | ✅ 완료 | 요약 기록 관리, 검색/필터링 |
 | Phase 3 | ✅ 완료 | Paddle 결제 시스템 연동 |
-| Phase 4 | ✅ 완료 | 실시간 구독 동기화, 웹훅 처리 |
+| Phase 4 | ✅ 완료 | 실시간 구독 동기화, 웹훅 처리, Paddle API 직접 조회 |
 | Phase 5 | 🚧 진행중 | 최적화 & 추가 기능 |
 | Phase 6 | 📅 예정 | 고급 기능 (팀 공유, 태그 관리) |
 
@@ -92,8 +93,10 @@
 - ✅ 결제 수단 변경
 - ✅ 구독 상태 실시간 추적
 - ✅ Webhook을 통한 자동 동기화
+- ✅ **Paddle API 직접 조회를 통한 수동 동기화**
 - ✅ 구독 만료일 계산 및 알림
 - ✅ 결제 내역 관리
+- ✅ **구독 갱신 시 자동 업데이트 (transaction.completed 이벤트)**
 
 ### ⚙️ 설정
 - ✅ 프로필 편집 (이름, 이메일, 프로필 사진)
@@ -128,6 +131,7 @@
 - **Paddle Billing** - 결제 처리 및 구독 관리
 - **Paddle Webhooks** - 구독 이벤트 처리
 - **Paddle.js v2** - 클라이언트 SDK
+- **Paddle REST API** - 서버 사이드 구독 조회 및 관리
 
 ### 배포 & 호스팅
 - **Vercel** - 자동 배포 및 호스팅
@@ -186,6 +190,8 @@ summarygenie_page/
 │  │  │  │  └─ route.ts                    # 구독 재개
 │  │  │  ├─ status/
 │  │  │  │  └─ route.ts                    # 구독 상태 조회
+│  │  │  ├─ sync/
+│  │  │  │  └─ route.ts                    # 구독 수동 동기화 (NEW)
 │  │  │  └─ update-payment/
 │  │  │     └─ route.ts                    # 결제 수단 변경
 │  │  ├─ test-admin/
@@ -718,7 +724,7 @@ export function PaddleCheckout() {
 }
 ```
 
-#### Paddle 웹훅 처리
+#### Paddle 웹훅 처리 (개선됨)
 
 ```typescript
 // app/api/webhooks/paddle/route.ts
@@ -754,7 +760,11 @@ export async function POST(request: NextRequest) {
       await handleSubscriptionCanceled(data);
       break;
     case 'transaction.completed':
+      // ✅ 구독 갱신 시 Paddle API에서 최신 정보 동기화
       await handleTransactionCompleted(data);
+      if (data.subscription_id) {
+        await syncSubscriptionFromPaddle(data.subscription_id);
+      }
       break;
   }
   
@@ -762,6 +772,39 @@ export async function POST(request: NextRequest) {
   await markEventAsProcessed(payload.event_id, event_type);
   
   return NextResponse.json({ success: true });
+}
+```
+
+#### 구독 수동 동기화
+
+```typescript
+// app/api/subscription/sync/route.ts
+export async function POST(request: NextRequest) {
+  // Firebase 인증
+  const token = await verifyIdToken(request);
+  const userId = token.uid;
+  
+  // Firestore에서 구독 찾기
+  const subscription = await getUserSubscription(userId);
+  
+  // Paddle API에서 최신 정보 가져오기
+  const paddleSubscription = await getPaddleSubscription(
+    subscription.paddleSubscriptionId
+  );
+  
+  // Firestore 업데이트
+  await updateSubscriptionInFirestore(subscription.id, {
+    currentPeriodEnd: new Date(paddleSubscription.current_billing_period.ends_at),
+    nextBillingDate: paddleSubscription.next_billed_at 
+      ? new Date(paddleSubscription.next_billed_at) 
+      : null,
+    status: paddleSubscription.status,
+  });
+  
+  return NextResponse.json({ 
+    success: true, 
+    message: '구독 정보가 동기화되었습니다.' 
+  });
 }
 ```
 
@@ -891,6 +934,34 @@ Authorization: Bearer {firebase-id-token}
 }
 ```
 
+#### `POST /api/subscription/sync` ⭐ NEW
+구독 정보 수동 동기화
+
+**Headers:**
+```
+Authorization: Bearer {firebase-id-token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "구독 정보가 동기화되었습니다.",
+  "subscription": {
+    "status": "active",
+    "currentPeriodEnd": "2024-12-15T00:00:00Z",
+    "nextBillingDate": "2024-12-15T00:00:00Z",
+    "daysUntilRenewal": 30,
+    "isPremium": true
+  }
+}
+```
+
+**사용 시나리오:**
+- 웹훅이 실패했을 때
+- 구독 정보가 맞지 않을 때 ("0일 남음" 문제 등)
+- 사용자가 문제를 신고했을 때
+
 #### `POST /api/subscription/update-payment`
 결제 수단 변경 URL 생성
 
@@ -933,7 +1004,7 @@ Content-Type: application/json
 - `subscription.past_due` - 결제 실패
 - `subscription.paused` - 구독 일시정지
 - `subscription.resumed` - 구독 재개
-- `transaction.completed` - 결제 완료
+- `transaction.completed` - 결제 완료 (✅ Paddle API 직접 조회 추가)
 
 **Response:**
 ```json
@@ -1068,6 +1139,7 @@ interface SubscriptionDocument {
 **인덱스:**
 - `userId` (ASC)
 - `paddleSubscriptionId` (ASC)
+- 복합 인덱스 (선택사항): `userId` (ASC), `createdAt` (DESC)
 
 **예시 문서:**
 ```json
@@ -1431,6 +1503,101 @@ service cloud.firestore {
 }
 ```
 
+### 8. 구독 갱신 후 "0일 남음" 문제 ⭐ NEW
+
+**증상:**
+- Pro 플랜 구독 중
+- Paddle에서 결제가 완료되었지만 대시보드에서 "다음 결제까지 0일 남음"으로 표시
+- 실제로는 30일 정도 남아있어야 함
+
+**원인:**
+- Paddle 웹훅의 이벤트 순서 문제
+- `transaction.completed` 이벤트 처리 시 `currentPeriodEnd` 업데이트 누락
+- `subscription.updated` 이벤트가 늦게 오거나 오지 않는 경우
+
+**해결 방법:**
+
+**1. 수동 동기화 (즉시 해결)**
+
+구독 관리 페이지에서 "구독 정보 동기화" 버튼 클릭:
+
+```typescript
+// 구독 관리 페이지에서
+const handleSync = async () => {
+  const response = await fetch('/api/subscription/sync', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${firebaseIdToken}`,
+    },
+  });
+  
+  if (response.ok) {
+    // 페이지 새로고침하면 정확한 날짜 표시
+    window.location.reload();
+  }
+};
+```
+
+**2. 자동 동기화 (근본 해결)**
+
+이미 적용됨 - `transaction.completed` 이벤트에서 Paddle API 직접 조회:
+
+```typescript
+// app/api/webhooks/paddle/route.ts
+async function handleTransactionCompleted(data: any) {
+  // 결제 기록 저장
+  await savePaymentRecord(data);
+  
+  // ✅ 구독 관련 결제인 경우 Paddle API에서 최신 정보 동기화
+  if (data.subscription_id) {
+    await syncSubscriptionFromPaddle(data.subscription_id);
+  }
+}
+```
+
+**예방:**
+- Firestore 인덱스 생성 (위 섹션 5 참조)
+- Paddle 웹훅 이벤트 로그 확인
+- 정기적인 구독 상태 점검
+
+### 9. Firestore 인덱스 필요 오류
+
+**증상:**
+```
+Error: 9 FAILED_PRECONDITION: The query requires an index
+```
+
+**해결 방법:**
+
+**옵션 1: 인덱스 생성 (권장)**
+
+에러 메시지의 링크를 클릭하여 Firebase Console에서 인덱스 자동 생성
+
+**옵션 2: 쿼리 수정**
+
+인덱스가 필요 없도록 쿼리 변경:
+
+```typescript
+// Before (인덱스 필요)
+const snapshot = await db
+  .collection('subscription')
+  .where('userId', '==', userId)
+  .orderBy('createdAt', 'desc')
+  .limit(1)
+  .get();
+
+// After (인덱스 불필요 - 클라이언트 사이드 정렬)
+const snapshot = await db
+  .collection('subscription')
+  .where('userId', '==', userId)
+  .get();
+
+const sortedDocs = snapshot.docs.sort((a, b) => 
+  b.data().createdAt.toMillis() - a.data().createdAt.toMillis()
+);
+const latestDoc = sortedDocs[0];
+```
+
 ---
 
 ## 📈 개발 로드맵
@@ -1465,6 +1632,9 @@ service cloud.firestore {
 - [x] 웹훅 이벤트 로깅
 - [x] 구독 상태 자동 업데이트
 - [x] 사용자 프로필 실시간 동기화
+- [x] **Paddle API 직접 조회 및 동기화** ⭐
+- [x] **수동 구독 동기화 기능** ⭐
+- [x] **구독 갱신 시 자동 업데이트** ⭐
 
 ### 🚧 Phase 5: 최적화 & 추가 기능 (진행 중)
 - [ ] 성능 최적화 (이미지, 번들 크기)
@@ -1542,9 +1712,10 @@ perf: 성능 개선
 예시:
 ```
 feat: Add infinite scroll to history page
-fix: Fix Paddle webhook signature verification
-docs: Update README with Paddle setup guide
+fix: Fix subscription renewal date sync issue
+docs: Update README with subscription sync feature
 refactor: Optimize Firestore queries with subcollections
+perf: Add Paddle API direct query for real-time sync
 ```
 
 ---
@@ -1606,6 +1777,6 @@ SOFTWARE.
 
 ---
 
-**Made with by SummaryGenie Team**
+**Made with ❤️ by SummaryGenie Team**
 
 *마지막 업데이트: 2025년 11월 15일*
