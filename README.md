@@ -1791,7 +1791,7 @@ gsutil cors set cors.json gs://your-bucket-name.appspot.com
 - [x] **프로필 사진 업로드** ⭐
 - [x] **보안 설정 (이메일/비밀번호 변경)** ⭐
 - [x] PWA 지원
-- [ ] 다국어 지원 (i18n)
+- [x] 다국어 지원 (i18n)
 - [ ] 에러 모니터링 (Sentry)
 - [ ] 분석 도구 (Google Analytics)
 - [ ] 다크 모드 개선
