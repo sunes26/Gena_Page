@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SearchBarProps {
   onSearch: (term: string) => void;
@@ -12,10 +13,13 @@ interface SearchBarProps {
 
 export default function SearchBar({
   onSearch,
-  placeholder = '제목으로 검색...',
+  placeholder,
   debounceMs = 500,
 }: SearchBarProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+
+  const defaultPlaceholder = t('dashboard.history.searchPlaceholder');
 
   // 디바운스 처리
   useEffect(() => {
@@ -38,7 +42,7 @@ export default function SearchBar({
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder || defaultPlaceholder}
         className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
       />
       {searchTerm && (

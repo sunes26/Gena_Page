@@ -6,6 +6,7 @@ import { User } from 'firebase/auth';
 import { User as UserIcon, Upload, Loader2, Camera, X } from 'lucide-react';
 import { updateUserProfile, uploadAndUpdateProfilePhoto } from '@/lib/auth';
 import { showSuccess, showError } from '@/lib/toast-helpers';
+import { useTranslation } from '@/hooks/useTranslation';
 import Image from 'next/image';
 
 interface ProfileSettingsProps {
@@ -14,6 +15,8 @@ interface ProfileSettingsProps {
 }
 
 export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps) {
+  const { t, locale } = useTranslation();
+  
   // 프로필 정보 상태
   const [displayName, setDisplayName] = useState(user.displayName || '');
   const [photoURL, setPhotoURL] = useState(user.photoURL || '');
@@ -35,16 +38,18 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
     if (!file) return;
 
     // 파일 크기 검증 (2MB)
-    const maxSize = 2 * 1024 * 1024; // 2MB
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
-      showError('파일 크기는 2MB 이하여야 합니다.');
+      showError(locale === 'ko' ? '파일 크기는 2MB 이하여야 합니다.' : 'File size must be under 2MB.');
       return;
     }
 
     // 파일 형식 검증
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      showError('JPEG, PNG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.');
+      showError(locale === 'ko' 
+        ? 'JPEG, PNG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.' 
+        : 'Only JPEG, PNG, GIF, WEBP images are allowed.');
       return;
     }
 
@@ -66,7 +71,6 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
     setUploadProgress(0);
 
     try {
-      // ✅ uploadAndUpdateProfilePhoto 함수 사용 (이미 프로필 업데이트 포함)
       const downloadURL = await uploadAndUpdateProfilePhoto(
         selectedFile,
         (progress: number) => {
@@ -78,11 +82,11 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
       setSelectedFile(null);
       setPreviewURL(null);
       
-      showSuccess('프로필 사진이 업데이트되었습니다.');
+      showSuccess(t('settings.profile.photoSuccess'));
       onUpdate();
     } catch (error: any) {
       console.error('Image upload error:', error);
-      showError(error.message || '이미지 업로드에 실패했습니다.');
+      showError(error.message || t('common.error'));
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -103,25 +107,24 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
     e.preventDefault();
 
     if (!displayName.trim()) {
-      showError('이름을 입력해주세요.');
+      showError(locale === 'ko' ? '이름을 입력해주세요.' : 'Please enter your name.');
       return;
     }
 
     if (displayName.trim() === user.displayName) {
-      showError('변경된 내용이 없습니다.');
+      showError(locale === 'ko' ? '변경된 내용이 없습니다.' : 'No changes to save.');
       return;
     }
 
     setProfileLoading(true);
 
     try {
-      // ✅ 개별 매개변수로 전달 (객체 X)
       await updateUserProfile(displayName.trim());
-      showSuccess('프로필이 업데이트되었습니다.');
+      showSuccess(t('settings.profile.success'));
       onUpdate();
     } catch (error: any) {
       console.error('Profile update error:', error);
-      showError(error.message || '프로필 업데이트에 실패했습니다.');
+      showError(error.message || t('common.error'));
     } finally {
       setProfileLoading(false);
     }
@@ -136,8 +139,12 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
             <Camera className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">프로필 사진</h3>
-            <p className="text-sm text-gray-500">프로필 사진을 변경하세요 (최대 2MB)</p>
+            <h3 className="text-lg font-semibold text-gray-900">{t('settings.profile.photo')}</h3>
+            <p className="text-sm text-gray-500">
+              {locale === 'ko' 
+                ? '프로필 사진을 변경하세요 (최대 2MB)' 
+                : 'Update your profile photo (max 2MB)'}
+            </p>
           </div>
         </div>
 
@@ -148,7 +155,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
               <div className="relative">
                 <Image
                   src={previewURL}
-                  alt="미리보기"
+                  alt={t('settings.profile.photo')}
                   width={128}
                   height={128}
                   className="w-32 h-32 rounded-full object-cover border-4 border-blue-100"
@@ -203,7 +210,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
                 {uploading && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">업로드 중...</span>
+                      <span className="text-gray-600">{t('settings.profile.uploading')}</span>
                       <span className="font-semibold text-blue-600">{uploadProgress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -225,12 +232,12 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
                     {uploading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        업로드 중...
+                        {t('settings.profile.uploading')}
                       </>
                     ) : (
                       <>
                         <Upload className="w-4 h-4 mr-2" />
-                        업로드
+                        {locale === 'ko' ? '업로드' : 'Upload'}
                       </>
                     )}
                   </button>
@@ -240,7 +247,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
                     disabled={uploading}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
-                    취소
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -252,10 +259,12 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
                   className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  사진 선택
+                  {t('settings.profile.uploadPhoto')}
                 </button>
                 <p className="text-xs text-gray-500 mt-2">
-                  JPEG, PNG, GIF, WEBP 형식 (최대 2MB)
+                  {locale === 'ko' 
+                    ? 'JPEG, PNG, GIF, WEBP 형식 (최대 2MB)' 
+                    : 'JPEG, PNG, GIF, WEBP formats (max 2MB)'}
                 </p>
               </div>
             )}
@@ -270,8 +279,12 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
             <UserIcon className="w-5 h-5 text-green-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">프로필 정보</h3>
-            <p className="text-sm text-gray-500">이름과 이메일을 관리하세요</p>
+            <h3 className="text-lg font-semibold text-gray-900">{t('settings.profile.title')}</h3>
+            <p className="text-sm text-gray-500">
+              {locale === 'ko' 
+                ? '이름과 이메일을 관리하세요' 
+                : 'Manage your name and email'}
+            </p>
           </div>
         </div>
 
@@ -279,13 +292,13 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
           {/* 이름 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              이름
+              {t('settings.profile.nameLabel')}
             </label>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="이름을 입력하세요"
+              placeholder={t('settings.profile.namePlaceholder')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={profileLoading}
             />
@@ -294,7 +307,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
           {/* 이메일 (읽기 전용) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              이메일
+              {t('settings.profile.emailLabel')}
             </label>
             <input
               type="email"
@@ -303,23 +316,23 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
             />
             <p className="text-xs text-gray-500 mt-1">
-              이메일 변경은 <span className="font-semibold">보안</span> 탭에서 가능합니다.
+              {t('settings.profile.emailNote')}
             </p>
           </div>
 
           {/* 이메일 인증 상태 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              이메일 인증 상태
+              {locale === 'ko' ? '이메일 인증 상태' : 'Email Verification Status'}
             </label>
             <div className="flex items-center space-x-2">
               {user.emailVerified ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  ✓ 인증됨
+                  ✓ {locale === 'ko' ? '인증됨' : 'Verified'}
                 </span>
               ) : (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  ⚠ 미인증
+                  ⚠ {locale === 'ko' ? '미인증' : 'Not Verified'}
                 </span>
               )}
             </div>
@@ -333,12 +346,12 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
             {profileLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                저장 중...
+                {t('settings.profile.saving')}
               </>
             ) : (
               <>
                 <UserIcon className="w-4 h-4 mr-2" />
-                프로필 저장
+                {t('settings.profile.saveButton')}
               </>
             )}
           </button>

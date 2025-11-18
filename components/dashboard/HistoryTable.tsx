@@ -2,10 +2,12 @@
 'use client';
 
 import { memo, useState, useEffect } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { ko } from 'date-fns/locale/ko';
+import { enUS } from 'date-fns/locale/en-US';
 import { FileText, Eye, ExternalLink } from 'lucide-react';
 import { HistoryDocument } from '@/lib/firebase/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface HistoryTableProps {
   history: (HistoryDocument & { id: string })[];
@@ -24,6 +26,7 @@ const HistoryTable = memo(function HistoryTable({
   onView,
   loading = false,
 }: HistoryTableProps) {
+  const { t, locale } = useTranslation();
   const [isMobile, setIsMobile] = useState(false);
 
   // ✅ 화면 크기 감지
@@ -111,10 +114,10 @@ const HistoryTable = memo(function HistoryTable({
       <div className="bg-white rounded-lg shadow-sm p-12 text-center">
         <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          아직 요약이 없습니다
+          {t('dashboard.history.empty')}
         </h3>
         <p className="text-gray-500 mb-6">
-          Chrome 확장 프로그램으로 웹페이지를 요약해보세요
+          {t('dashboard.history.emptyDesc')}
         </p>
         <a
           href="https://chrome.google.com/webstore"
@@ -122,11 +125,13 @@ const HistoryTable = memo(function HistoryTable({
           rel="noopener noreferrer"
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
         >
-          확장 프로그램 설치
+          {t('dashboard.home.extension.install')}
         </a>
       </div>
     );
   }
+
+  const dateLocale = locale === 'ko' ? ko : enUS;
 
   // ✅ 조건부 렌더링: 하나만 렌더링
   return (
@@ -138,16 +143,16 @@ const HistoryTable = memo(function HistoryTable({
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  제목
+                  {t('dashboard.history.table.title')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  도메인
+                  {t('dashboard.history.table.domain')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  생성일
+                  {t('dashboard.history.table.date')}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  액션
+                  {t('dashboard.history.table.actions')}
                 </th>
               </tr>
             </thead>
@@ -155,7 +160,7 @@ const HistoryTable = memo(function HistoryTable({
               {history.map((item) => {
                 const timeAgo = formatDistanceToNow(item.createdAt.toDate(), {
                   addSuffix: true,
-                  locale: ko,
+                  locale: dateLocale,
                 });
                 const summaryContent = getSummaryContent(item);
 
@@ -170,11 +175,11 @@ const HistoryTable = memo(function HistoryTable({
                         <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition">
-                            {item.title || '제목 없음'}
+                            {item.title || t('dashboard.modal.title')}
                           </div>
                           {summaryContent && (
                             <div className="text-xs text-gray-500 mt-0.5">
-                              {summaryContent.length}자
+                              {summaryContent.length}{locale === 'ko' ? '자' : ' chars'}
                             </div>
                           )}
                         </div>
@@ -201,7 +206,7 @@ const HistoryTable = memo(function HistoryTable({
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="원본 페이지 열기"
+                            title={t('dashboard.modal.originalUrl')}
                           >
                             <ExternalLink className="w-4 h-4" />
                           </a>
@@ -214,7 +219,7 @@ const HistoryTable = memo(function HistoryTable({
                           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
                         >
                           <Eye className="w-4 h-4 mr-1" />
-                          상세보기
+                          {t('dashboard.history.table.view')}
                         </button>
                       </div>
                     </td>
@@ -230,7 +235,7 @@ const HistoryTable = memo(function HistoryTable({
           {history.map((item) => {
             const timeAgo = formatDistanceToNow(item.createdAt.toDate(), {
               addSuffix: true,
-              locale: ko,
+              locale: dateLocale,
             });
             const summaryContent = getSummaryContent(item);
 
@@ -246,7 +251,7 @@ const HistoryTable = memo(function HistoryTable({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">
-                      {item.title || '제목 없음'}
+                      {item.title || t('dashboard.modal.title')}
                     </h3>
                     <div className="text-xs text-gray-500">{timeAgo}</div>
                   </div>
@@ -260,7 +265,7 @@ const HistoryTable = memo(function HistoryTable({
                     )}
                     {summaryContent && (
                       <span className="text-xs text-gray-500">
-                        {summaryContent.length}자
+                        {summaryContent.length}{locale === 'ko' ? '자' : ' chars'}
                       </span>
                     )}
                   </div>
@@ -272,7 +277,7 @@ const HistoryTable = memo(function HistoryTable({
                     className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
                   >
                     <Eye className="w-3.5 h-3.5 mr-1" />
-                    보기
+                    {t('dashboard.history.table.view')}
                   </button>
                 </div>
               </div>

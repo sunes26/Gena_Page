@@ -4,6 +4,7 @@
 import { useMemo } from 'react';
 import { Filter } from 'lucide-react';
 import { HistoryDocument } from '@/lib/firebase/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DomainFilterProps {
   history: (HistoryDocument & { id: string })[];
@@ -16,6 +17,8 @@ export default function DomainFilter({
   selectedDomain,
   onDomainChange,
 }: DomainFilterProps) {
+  const { t } = useTranslation();
+
   // 고유 도메인 목록 추출
   const domains = useMemo(() => {
     const domainSet = new Set<string>();
@@ -41,7 +44,7 @@ export default function DomainFilter({
         onChange={(e) => onDomainChange(e.target.value)}
         className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none cursor-pointer"
       >
-        <option value="">전체 도메인</option>
+        <option value="">{t('dashboard.history.filterAll')}</option>
         {domains.map((domain) => (
           <option key={domain} value={domain}>
             {domain}

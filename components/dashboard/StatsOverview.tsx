@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { FileText, TrendingUp, Calendar, Award } from 'lucide-react';
 import { useHistory, useHistoryCount } from '@/hooks/useHistory';
 import { useUsageStats } from '@/hooks/useUsageStats';
+import { useTranslation } from '@/hooks/useTranslation';
 import StatsCard from './StatsCard';
 import UsageChart from './UsageChart';
 
@@ -13,6 +14,8 @@ interface StatsOverviewProps {
 }
 
 export default function StatsOverview({ userId }: StatsOverviewProps) {
+  const { t, locale } = useTranslation();
+  
   // 히스토리 총 개수
   const { count: totalCount, loading: countLoading } = useHistoryCount(userId);
 
@@ -45,19 +48,18 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
   const mostActiveDay = useMemo(() => {
     if (!dailyStats || dailyStats.length === 0) return null;
 
-    const dayOfWeekCounts: { [key: string]: number } = {
-      일: 0,
-      월: 0,
-      화: 0,
-      수: 0,
-      목: 0,
-      금: 0,
-      토: 0,
-    };
+    const dayOfWeekCounts: { [key: string]: number } = 
+      locale === 'ko' 
+        ? { 일: 0, 월: 0, 화: 0, 수: 0, 목: 0, 금: 0, 토: 0 }
+        : { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
+
+    const dayNames = locale === 'ko' 
+      ? ['일', '월', '화', '수', '목', '금', '토']
+      : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     dailyStats.forEach((stat) => {
       const date = new Date(stat.date);
-      const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+      const dayOfWeek = dayNames[date.getDay()];
       dayOfWeekCounts[dayOfWeek] += stat.count || 0;
     });
 
@@ -67,7 +69,7 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
     );
 
     return maxDay.count > 0 ? maxDay.day : null;
-  }, [dailyStats]);
+  }, [dailyStats, locale]);
 
   // 평균 일일 사용량
   const averageDaily = dailyStats.length > 0
@@ -77,9 +79,11 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">사용 통계</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('settings.stats.title')}</h3>
         <p className="text-sm text-gray-500 mb-6">
-          최근 30일간의 요약 활동을 확인하세요.
+          {locale === 'ko' 
+            ? '최근 30일간의 요약 활동을 확인하세요.' 
+            : 'Review your summary activity over the last 30 days.'}
         </p>
       </div>
 
@@ -87,40 +91,40 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* 총 요약 수 */}
         <StatsCard
-          title="총 요약"
+          title={t('settings.stats.totalSummaries')}
           value={totalCount}
           icon={FileText}
-          description="전체 기간"
+          description={locale === 'ko' ? '전체 기간' : 'All time'}
           color="blue"
           loading={countLoading}
         />
 
         {/* 이번 달 요약 */}
         <StatsCard
-          title="이번 달"
+          title={t('settings.stats.thisMonth')}
           value={monthlyTotal}
           icon={TrendingUp}
-          description="최근 30일"
+          description={locale === 'ko' ? '최근 30일' : 'Last 30 days'}
           color="green"
           loading={statsLoading}
         />
 
         {/* 평균 사용량 */}
         <StatsCard
-          title="일평균"
-          value={`${averageDaily}회`}
+          title={locale === 'ko' ? '일평균' : 'Daily Avg'}
+          value={`${averageDaily}${locale === 'ko' ? '회' : ''}`}
           icon={Calendar}
-          description="하루 평균"
+          description={locale === 'ko' ? '하루 평균' : 'Per day'}
           color="purple"
           loading={statsLoading}
         />
 
         {/* 가장 활발한 요일 */}
         <StatsCard
-          title="활발한 요일"
+          title={t('settings.stats.mostActiveDay')}
           value={mostActiveDay || '-'}
           icon={Award}
-          description="가장 많이 사용"
+          description={locale === 'ko' ? '가장 많이 사용' : 'Most active'}
           color="orange"
           loading={statsLoading}
         />
@@ -133,7 +137,7 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
       {topDomains.length > 0 && (
         <div className="bg-white rounded-lg shadow p-6">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            가장 많이 요약한 도메인 Top 5
+            {t('settings.stats.topDomains')}
           </h4>
           <div className="space-y-3">
             {topDomains.map((item, index) => (
@@ -158,7 +162,9 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-gray-900">{item.count}</p>
-                  <p className="text-xs text-gray-500">요약</p>
+                  <p className="text-xs text-gray-500">
+                    {locale === 'ko' ? '요약' : 'summaries'}
+                  </p>
                 </div>
               </div>
             ))}
@@ -171,10 +177,12 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            아직 통계가 없습니다
+            {locale === 'ko' ? '아직 통계가 없습니다' : 'No statistics yet'}
           </h3>
           <p className="text-gray-500">
-            Chrome 확장 프로그램으로 페이지를 요약하면 통계가 표시됩니다.
+            {locale === 'ko' 
+              ? 'Chrome 확장 프로그램으로 페이지를 요약하면 통계가 표시됩니다.' 
+              : 'Start summarizing pages to see your statistics.'}
           </p>
         </div>
       )}

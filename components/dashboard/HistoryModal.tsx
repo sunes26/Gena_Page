@@ -5,8 +5,10 @@ import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X, ExternalLink, Copy, Check, Calendar, Globe } from 'lucide-react';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko } from 'date-fns/locale/ko';
+import { enUS } from 'date-fns/locale/en-US';
 import { HistoryDocument } from '@/lib/firebase/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface HistoryModalProps {
   item: (HistoryDocument & { id: string }) | null;
@@ -14,6 +16,7 @@ interface HistoryModalProps {
 }
 
 export default function HistoryModal({ item, onClose }: HistoryModalProps) {
+  const { t, locale } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const isOpen = !!item;
@@ -41,7 +44,8 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
 
   if (!item) return null;
 
-  const createdDate = format(item.createdAt.toDate(), 'PPP (EEE) p', { locale: ko });
+  const dateLocale = locale === 'ko' ? ko : enUS;
+  const createdDate = format(item.createdAt.toDate(), 'PPP (EEE) p', { locale: dateLocale });
   const summaryContent = getSummaryContent(item);
 
   return (
@@ -85,7 +89,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
 
                   {/* 제목 */}
                   <Dialog.Title className="text-2xl font-bold text-gray-900 pr-12 mb-3">
-                    {item.title || '제목 없음'}
+                    {item.title || t('dashboard.modal.title')}
                   </Dialog.Title>
 
                   {/* 메타 정보 */}
@@ -109,7 +113,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                     {/* 글자 수 */}
                     {summaryContent && (
                       <div className="text-gray-500">
-                        {summaryContent.length.toLocaleString()}자
+                        {summaryContent.length.toLocaleString()}{locale === 'ko' ? '자' : ' chars'}
                       </div>
                     )}
                   </div>
@@ -121,7 +125,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                   {item.url && (
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
-                        원본 URL
+                        {t('dashboard.modal.originalUrl')}
                       </div>
                       <a
                         href={item.url}
@@ -147,7 +151,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                         <Copy className="w-8 h-8 text-gray-300" />
                       </div>
-                      <p className="text-sm">요약 내용이 없습니다</p>
+                      <p className="text-sm">{t('dashboard.history.empty')}</p>
                     </div>
                   )}
                 </div>
@@ -155,7 +159,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                 {/* 푸터 */}
                 <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4">
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <span>문서 ID: {item.id.slice(0, 8)}...</span>
+                    <span>ID: {item.id.slice(0, 8)}...</span>
                   </div>
 
                   <div className="flex space-x-2">
@@ -164,7 +168,7 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                       onClick={onClose}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                     >
-                      닫기
+                      {t('dashboard.modal.close')}
                     </button>
 
                     {/* 복사 버튼 */}
@@ -180,12 +184,12 @@ export default function HistoryModal({ item, onClose }: HistoryModalProps) {
                       {copied ? (
                         <>
                           <Check className="w-4 h-4" />
-                          <span>복사됨!</span>
+                          <span>{t('dashboard.modal.copied')}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          <span>복사하기</span>
+                          <span>{t('dashboard.modal.copy')}</span>
                         </>
                       )}
                     </button>

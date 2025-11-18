@@ -4,6 +4,7 @@
 import { useState, lazy, Suspense } from 'react';
 import { DailyDocument } from '@/lib/firebase/types';
 import { BarChart3, TrendingUp, Loader2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // ✅ Recharts Dynamic Import (300KB 절약)
 const BarChart = lazy(() => 
@@ -56,11 +57,13 @@ function ChartSkeleton() {
 function ChartContent({ 
   weeklyData, 
   monthlyData, 
-  activeChart 
+  activeChart,
+  locale
 }: { 
   weeklyData: any[]; 
   monthlyData: any[]; 
   activeChart: ChartType;
+  locale: string;
 }) {
   // 커스텀 툴팁
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -69,7 +72,10 @@ function ChartContent({
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
           <p className="text-sm font-semibold text-gray-900 mb-1">{label}</p>
           <p className="text-sm text-gray-600">
-            요약 횟수: <span className="font-bold text-[#69D2E7]">{payload[0].value}회</span>
+            {locale === 'ko' ? '요약 횟수: ' : 'Summaries: '}
+            <span className="font-bold text-[#69D2E7]">
+              {payload[0].value}{locale === 'ko' ? '회' : ''}
+            </span>
           </p>
         </div>
       );
@@ -137,6 +143,7 @@ export default function UsageChart({
   loading = false,
   type = 'both'
 }: UsageChartProps) {
+  const { t, locale } = useTranslation();
   const [activeChart, setActiveChart] = useState<ChartType>('weekly');
 
   if (loading) {
@@ -147,13 +154,19 @@ export default function UsageChart({
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          사용량 통계
+          {t('settings.stats.title')}
         </h3>
         <div className="h-80 flex items-center justify-center text-gray-400">
           <div className="text-center">
             <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium mb-2">아직 사용 데이터가 없습니다</p>
-            <p className="text-sm">Chrome 확장 프로그램으로 페이지를 요약해보세요</p>
+            <p className="text-lg font-medium mb-2">
+              {locale === 'ko' ? '아직 사용 데이터가 없습니다' : 'No usage data yet'}
+            </p>
+            <p className="text-sm">
+              {locale === 'ko' 
+                ? 'Chrome 확장 프로그램으로 페이지를 요약해보세요' 
+                : 'Start summarizing pages with the Chrome extension'}
+            </p>
           </div>
         </div>
       </div>
@@ -163,11 +176,16 @@ export default function UsageChart({
   // 최근 7일 데이터 (막대 그래프용)
   const weeklyData = data.slice(-7).map((stat) => {
     const date = new Date(stat.date);
-    const dayName = date.toLocaleDateString('ko-KR', { 
-      month: 'short',
-      day: 'numeric',
-      weekday: 'short' 
-    });
+    const dayName = locale === 'ko'
+      ? date.toLocaleDateString('ko-KR', { 
+          month: 'short',
+          day: 'numeric',
+          weekday: 'short' 
+        })
+      : date.toLocaleDateString('en-US', { 
+          month: 'short',
+          day: 'numeric'
+        });
     
     return {
       date: stat.date,
@@ -194,10 +212,15 @@ export default function UsageChart({
 
   Object.keys(groupedByWeek).sort().forEach((weekKey) => {
     const date = new Date(weekKey);
-    const label = date.toLocaleDateString('ko-KR', { 
-      month: 'short',
-      day: 'numeric'
-    });
+    const label = locale === 'ko'
+      ? date.toLocaleDateString('ko-KR', { 
+          month: 'short',
+          day: 'numeric'
+        })
+      : date.toLocaleDateString('en-US', { 
+          month: 'short',
+          day: 'numeric'
+        });
     
     monthlyData.push({
       date: weekKey,
@@ -214,12 +237,16 @@ export default function UsageChart({
           {activeChart === 'weekly' ? (
             <>
               <BarChart3 className="w-5 h-5 text-[#69D2E7]" />
-              <span>최근 7일 사용량</span>
+              <span>
+                {locale === 'ko' ? '최근 7일 사용량' : 'Last 7 Days Usage'}
+              </span>
             </>
           ) : (
             <>
               <TrendingUp className="w-5 h-5 text-[#69D2E7]" />
-              <span>월별 사용 추이</span>
+              <span>
+                {locale === 'ko' ? '월별 사용 추이' : 'Monthly Trend'}
+              </span>
             </>
           )}
         </h3>
@@ -235,7 +262,7 @@ export default function UsageChart({
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              주간
+              {locale === 'ko' ? '주간' : 'Weekly'}
             </button>
             <button
               onClick={() => setActiveChart('monthly')}
@@ -245,7 +272,7 @@ export default function UsageChart({
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              월간
+              {locale === 'ko' ? '월간' : 'Monthly'}
             </button>
           </div>
         )}
@@ -261,6 +288,7 @@ export default function UsageChart({
           weeklyData={weeklyData} 
           monthlyData={monthlyData} 
           activeChart={activeChart}
+          locale={locale}
         />
       </Suspense>
 
@@ -268,24 +296,36 @@ export default function UsageChart({
       <div className="mt-6 pt-4 border-t border-gray-100">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-xs text-gray-500 mb-1">평균</p>
+            <p className="text-xs text-gray-500 mb-1">
+              {locale === 'ko' ? '평균' : 'Average'}
+            </p>
             <p className="text-lg font-bold text-gray-900">
               {(weeklyData.reduce((sum, d) => sum + d.count, 0) / weeklyData.length).toFixed(1)}
-              <span className="text-xs font-normal text-gray-500 ml-1">회/일</span>
+              <span className="text-xs font-normal text-gray-500 ml-1">
+                {locale === 'ko' ? '회/일' : '/day'}
+              </span>
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">최대</p>
+            <p className="text-xs text-gray-500 mb-1">
+              {locale === 'ko' ? '최대' : 'Maximum'}
+            </p>
             <p className="text-lg font-bold text-gray-900">
               {Math.max(...weeklyData.map(d => d.count))}
-              <span className="text-xs font-normal text-gray-500 ml-1">회</span>
+              <span className="text-xs font-normal text-gray-500 ml-1">
+                {locale === 'ko' ? '회' : ''}
+              </span>
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">총합</p>
+            <p className="text-xs text-gray-500 mb-1">
+              {locale === 'ko' ? '총합' : 'Total'}
+            </p>
             <p className="text-lg font-bold text-gray-900">
               {weeklyData.reduce((sum, d) => sum + d.count, 0)}
-              <span className="text-xs font-normal text-gray-500 ml-1">회</span>
+              <span className="text-xs font-normal text-gray-500 ml-1">
+                {locale === 'ko' ? '회' : ''}
+              </span>
             </p>
           </div>
         </div>

@@ -2,11 +2,12 @@
 'use client';
 
 import Link from 'next/link';
-// ✅ date-fns 최적화: 필요한 함수만 import
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { ko } from 'date-fns/locale/ko';
+import { enUS } from 'date-fns/locale/en-US';
 import { FileText, ExternalLink, ArrowRight } from 'lucide-react';
 import { HistoryDocument } from '@/lib/firebase/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RecentHistoryProps {
   history: (HistoryDocument & { id: string })[];
@@ -17,6 +18,8 @@ export default function RecentHistory({
   history,
   loading = false,
 }: RecentHistoryProps) {
+  const { t, locale } = useTranslation();
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -43,28 +46,32 @@ export default function RecentHistory({
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          최근 요약
+          {t('dashboard.home.stats.recentWeek')}
         </h3>
         <div className="text-center py-12">
           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-4">아직 요약 기록이 없습니다</p>
+          <p className="text-gray-500 mb-4">{t('dashboard.history.empty')}</p>
           <p className="text-sm text-gray-400">
-            Chrome 확장 프로그램을 설치하고 웹페이지를 요약해보세요
+            {t('dashboard.history.emptyDesc')}
           </p>
         </div>
       </div>
     );
   }
 
+  const dateLocale = locale === 'ko' ? ko : enUS;
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">최근 요약</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          {t('dashboard.home.stats.recentWeek')}
+        </h3>
         <Link
           href="/history"
           className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
         >
-          <span>전체보기</span>
+          <span>{locale === 'ko' ? '전체보기' : 'View All'}</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
@@ -73,7 +80,7 @@ export default function RecentHistory({
         {history.slice(0, 5).map((item) => {
           const timeAgo = formatDistanceToNow(item.createdAt.toDate(), {
             addSuffix: true,
-            locale: ko,
+            locale: dateLocale,
           });
 
           return (
@@ -87,7 +94,7 @@ export default function RecentHistory({
 
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-medium text-gray-900 truncate mb-1 group-hover:text-blue-600 transition">
-                  {item.title || '제목 없음'}
+                  {item.title || t('dashboard.modal.title')}
                 </h4>
 
                 <div className="flex items-center space-x-2 text-xs text-gray-500">
@@ -125,7 +132,9 @@ export default function RecentHistory({
             href="/history"
             className="block text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
-            {history.length - 5}개 더보기
+            {locale === 'ko' 
+              ? `${history.length - 5}개 더보기` 
+              : `View ${history.length - 5} more`}
           </Link>
         </div>
       )}

@@ -6,6 +6,7 @@ import { User } from 'firebase/auth';
 import { Lock, Mail, Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
 import { updateUserEmail, changePassword } from '@/lib/auth';
 import { showSuccess, showError } from '@/lib/toast-helpers';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SecuritySettingsProps {
   user: User;
@@ -13,6 +14,8 @@ interface SecuritySettingsProps {
 }
 
 export default function SecuritySettings({ user, onUpdate }: SecuritySettingsProps) {
+  const { t, locale } = useTranslation();
+  
   // 이메일 변경
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
@@ -34,19 +37,19 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
     e.preventDefault();
 
     if (!newEmail.trim()) {
-      showError('새 이메일을 입력해주세요.');
+      showError(locale === 'ko' ? '새 이메일을 입력해주세요.' : 'Please enter a new email.');
       return;
     }
 
     if (!emailPassword) {
-      showError('현재 비밀번호를 입력해주세요.');
+      showError(locale === 'ko' ? '현재 비밀번호를 입력해주세요.' : 'Please enter your current password.');
       return;
     }
 
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newEmail)) {
-      showError('올바른 이메일 형식이 아닙니다.');
+      showError(t('auth.errors.invalidEmail'));
       return;
     }
 
@@ -54,14 +57,16 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
 
     try {
       await updateUserEmail(newEmail.trim(), emailPassword);
-      showSuccess('이메일이 변경되었습니다. 새 이메일로 인증 메일이 발송되었습니다.');
+      showSuccess(locale === 'ko' 
+        ? '이메일이 변경되었습니다. 새 이메일로 인증 메일이 발송되었습니다.' 
+        : 'Email changed successfully. Verification email sent to your new email.');
       
       // 폼 리셋
       setNewEmail('');
       setEmailPassword('');
       onUpdate();
     } catch (error: any) {
-      showError(error.message || '이메일 변경에 실패했습니다.');
+      showError(error.message || t('common.error'));
     } finally {
       setEmailLoading(false);
     }
@@ -72,27 +77,29 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
     e.preventDefault();
 
     if (!currentPassword) {
-      showError('현재 비밀번호를 입력해주세요.');
+      showError(locale === 'ko' ? '현재 비밀번호를 입력해주세요.' : 'Please enter your current password.');
       return;
     }
 
     if (!newPassword) {
-      showError('새 비밀번호를 입력해주세요.');
+      showError(locale === 'ko' ? '새 비밀번호를 입력해주세요.' : 'Please enter a new password.');
       return;
     }
 
     if (newPassword.length < 6) {
-      showError('비밀번호는 최소 6자 이상이어야 합니다.');
+      showError(t('auth.errors.passwordTooShort'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showError('새 비밀번호가 일치하지 않습니다.');
+      showError(t('auth.errors.passwordMismatch'));
       return;
     }
 
     if (currentPassword === newPassword) {
-      showError('현재 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.');
+      showError(locale === 'ko' 
+        ? '현재 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.' 
+        : 'New password must be different from current password.');
       return;
     }
 
@@ -100,14 +107,14 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
 
     try {
       await changePassword(currentPassword, newPassword);
-      showSuccess('비밀번호가 변경되었습니다.');
+      showSuccess(t('settings.security.success'));
       
       // 폼 리셋
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
-      showError(error.message || '비밀번호 변경에 실패했습니다.');
+      showError(error.message || t('common.error'));
     } finally {
       setPasswordLoading(false);
     }
@@ -122,8 +129,12 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
             <Mail className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">이메일 변경</h3>
-            <p className="text-sm text-gray-500">로그인에 사용하는 이메일을 변경합니다.</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {locale === 'ko' ? '이메일 변경' : 'Change Email'}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {locale === 'ko' ? '로그인에 사용하는 이메일을 변경합니다.' : 'Update your login email address.'}
+            </p>
           </div>
         </div>
 
@@ -131,7 +142,7 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
           {/* 현재 이메일 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              현재 이메일
+              {locale === 'ko' ? '현재 이메일' : 'Current Email'}
             </label>
             <input
               type="email"
@@ -144,13 +155,13 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
           {/* 새 이메일 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              새 이메일
+              {locale === 'ko' ? '새 이메일' : 'New Email'}
             </label>
             <input
               type="email"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              placeholder="새 이메일 주소"
+              placeholder={locale === 'ko' ? '새 이메일 주소' : 'New email address'}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={emailLoading}
             />
@@ -159,13 +170,13 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
           {/* 현재 비밀번호 확인 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              현재 비밀번호 확인
+              {t('settings.security.currentPassword')}
             </label>
             <input
               type="password"
               value={emailPassword}
               onChange={(e) => setEmailPassword(e.target.value)}
-              placeholder="현재 비밀번호"
+              placeholder={t('settings.security.currentPassword')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={emailLoading}
             />
@@ -179,12 +190,12 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
             {emailLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                변경 중...
+                {locale === 'ko' ? '변경 중...' : 'Updating...'}
               </>
             ) : (
               <>
                 <Mail className="w-4 h-4 mr-2" />
-                이메일 변경
+                {locale === 'ko' ? '이메일 변경' : 'Change Email'}
               </>
             )}
           </button>
@@ -198,8 +209,12 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
             <Lock className="w-5 h-5 text-green-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">비밀번호 변경</h3>
-            <p className="text-sm text-gray-500">계정 보안을 위해 주기적으로 비밀번호를 변경하세요.</p>
+            <h3 className="text-lg font-semibold text-gray-900">{t('settings.security.changePassword')}</h3>
+            <p className="text-sm text-gray-500">
+              {locale === 'ko' 
+                ? '계정 보안을 위해 주기적으로 비밀번호를 변경하세요.' 
+                : 'Update your password regularly for better security.'}
+            </p>
           </div>
         </div>
 
@@ -207,14 +222,14 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
           {/* 현재 비밀번호 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              현재 비밀번호
+              {t('settings.security.currentPassword')}
             </label>
             <div className="relative">
               <input
                 type={showCurrentPassword ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="현재 비밀번호"
+                placeholder={t('settings.security.currentPassword')}
                 className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={passwordLoading}
               />
@@ -231,14 +246,14 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
           {/* 새 비밀번호 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              새 비밀번호
+              {t('settings.security.newPassword')}
             </label>
             <div className="relative">
               <input
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="새 비밀번호 (최소 6자)"
+                placeholder={locale === 'ko' ? '새 비밀번호 (최소 6자)' : 'New password (min 6 chars)'}
                 className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={passwordLoading}
               />
@@ -255,14 +270,14 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
           {/* 새 비밀번호 확인 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              새 비밀번호 확인
+              {t('settings.security.confirmPassword')}
             </label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="새 비밀번호 확인"
+                placeholder={t('settings.security.confirmPassword')}
                 className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={passwordLoading}
               />
@@ -284,12 +299,12 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
             {passwordLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                변경 중...
+                {t('settings.security.updating')}
               </>
             ) : (
               <>
                 <Shield className="w-4 h-4 mr-2" />
-                비밀번호 변경
+                {t('settings.security.updateButton')}
               </>
             )}
           </button>

@@ -4,12 +4,15 @@
 import { useState } from 'react';
 import { Bell, Mail, Zap, Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/lib/toast-helpers';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface NotificationSettingsProps {
   userId: string;
 }
 
 export default function NotificationSettings({ userId }: NotificationSettingsProps) {
+  const { t, locale } = useTranslation();
+  
   // 알림 설정 상태
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [summaryComplete, setSummaryComplete] = useState(true);
@@ -44,9 +47,9 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
         })
       );
 
-      showSuccess('알림 설정이 저장되었습니다.');
+      showSuccess(t('settings.notifications.success'));
     } catch (error) {
-      showError('알림 설정 저장에 실패했습니다.');
+      showError(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -55,9 +58,9 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">알림 설정</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('settings.notifications.title')}</h3>
         <p className="text-sm text-gray-500 mb-6">
-          받고 싶은 알림을 선택하세요.
+          {locale === 'ko' ? '받고 싶은 알림을 선택하세요.' : 'Choose which notifications you want to receive.'}
         </p>
       </div>
 
@@ -70,8 +73,12 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
               <Mail className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-gray-900">이메일 알림</h4>
-              <p className="text-xs text-gray-500">모든 이메일 알림 활성화/비활성화</p>
+              <h4 className="text-sm font-semibold text-gray-900">{t('settings.notifications.emailNotifications')}</h4>
+              <p className="text-xs text-gray-500">
+                {locale === 'ko' 
+                  ? '모든 이메일 알림 활성화/비활성화' 
+                  : 'Enable/disable all email notifications'}
+              </p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -92,8 +99,8 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
             <div className="flex items-center space-x-3">
               <Zap className="w-5 h-5 text-green-600" />
               <div>
-                <h4 className="text-sm font-medium text-gray-900">요약 완료 알림</h4>
-                <p className="text-xs text-gray-500">웹페이지 요약이 완료되면 이메일로 알립니다.</p>
+                <h4 className="text-sm font-medium text-gray-900">{t('settings.notifications.summaryComplete')}</h4>
+                <p className="text-xs text-gray-500">{t('settings.notifications.summaryCompleteDesc')}</p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -113,8 +120,8 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
             <div className="flex items-center space-x-3">
               <Bell className="w-5 h-5 text-purple-600" />
               <div>
-                <h4 className="text-sm font-medium text-gray-900">주간 리포트</h4>
-                <p className="text-xs text-gray-500">매주 월요일 사용 통계를 이메일로 받습니다.</p>
+                <h4 className="text-sm font-medium text-gray-900">{t('settings.notifications.weeklyReport')}</h4>
+                <p className="text-xs text-gray-500">{t('settings.notifications.weeklyReportDesc')}</p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -134,8 +141,8 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
             <div className="flex items-center space-x-3">
               <Mail className="w-5 h-5 text-orange-600" />
               <div>
-                <h4 className="text-sm font-medium text-gray-900">프로모션 및 이벤트</h4>
-                <p className="text-xs text-gray-500">새로운 기능, 할인 정보를 이메일로 받습니다.</p>
+                <h4 className="text-sm font-medium text-gray-900">{t('settings.notifications.marketing')}</h4>
+                <p className="text-xs text-gray-500">{t('settings.notifications.marketingDesc')}</p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -162,10 +169,10 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              저장 중...
+              {t('settings.notifications.saving')}
             </>
           ) : (
-            '변경사항 저장'
+            t('settings.notifications.saveButton')
           )}
         </button>
       </div>
