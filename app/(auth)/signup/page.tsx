@@ -4,7 +4,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signUp, signInWithGoogle, getFirebaseErrorMessage } from '@/lib/auth';
+import { signUp, signInWithGoogle } from '@/lib/auth';
+import { translateAuthError } from '@/lib/auth-errors';
 import { getFirestoreInstance } from '@/lib/firebase/client';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -85,8 +86,9 @@ export default function SignupPage() {
       router.push('/verify-email?email=' + encodeURIComponent(email));
     } catch (error: any) {
       console.error('Signup error:', error);
+      // translateAuthError 사용 - 에러 코드를 번역 키로 변환 후 번역
       const errorMessage = error.code
-        ? getFirebaseErrorMessage(error.code)
+        ? translateAuthError(error, t)
         : error.message || t('auth.errors.signupFailed');
       setError(errorMessage);
     } finally {
@@ -130,8 +132,9 @@ export default function SignupPage() {
       router.refresh();
     } catch (error: any) {
       console.error('Google signup error:', error);
+      // translateAuthError 사용
       const errorMessage = error.code
-        ? getFirebaseErrorMessage(error.code)
+        ? translateAuthError(error, t)
         : t('auth.errors.signupFailed');
       setError(errorMessage);
     } finally {

@@ -3,7 +3,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { resetPassword, getFirebaseErrorMessage } from '@/lib/auth';
+import { resetPassword } from '@/lib/auth';
+import { translateAuthError } from '@/lib/auth-errors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export default function ForgotPasswordPage() {
@@ -33,8 +34,9 @@ export default function ForgotPasswordPage() {
       setEmail('');
     } catch (error: any) {
       console.error('Reset password error:', error);
+      // translateAuthError 사용 - 다국어 지원 에러 메시지
       const errorMessage = error.code
-        ? getFirebaseErrorMessage(error.code)
+        ? translateAuthError(error, t)
         : t('auth.errors.resetFailed');
       setError(errorMessage);
     } finally {
