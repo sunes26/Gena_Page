@@ -1,4 +1,3 @@
-
 {
   "common": {
     "loading": "Loading...",
@@ -81,7 +80,18 @@
       "agreeTermsRequired": "Please agree to the Terms of Service.",
       "loginFailed": "Login failed.",
       "signupFailed": "Sign up failed.",
-      "resetFailed": "Failed to send password reset email."
+      "resetFailed": "Failed to send password reset email.",
+      "wrongPassword": "Current password is incorrect.",
+      "emailInUse": "Email is already in use.",
+      "invalidEmailFormat": "Invalid email format.",
+      "recentLoginRequired": "Please sign in again for security.",
+      "weakPassword": "Password must be at least 6 characters.",
+      "userNotFound": "User not found.",
+      "tooManyRequests": "Too many attempts. Please try again later.",
+      "networkError": "Network error occurred.",
+      "popupClosed": "Login popup was closed.",
+      "popupCancelled": "Previous popup request was cancelled.",
+      "unknownError": "An unknown error occurred."
     }
   },
   "dashboard": {
@@ -157,6 +167,12 @@
       "copy": "Copy",
       "copied": "Copied!",
       "close": "Close"
+    },
+    "page": {
+      "userId": "User ID",
+      "emailVerified": "Email Verified",
+      "yes": "Yes",
+      "no": "No"
     }
   },
   "subscription": {
@@ -336,6 +352,88 @@
         "description": "Check your summaries anytime via web dashboard"
       }
     },
+    "problemStatement": {
+      "badge": "Do you have these concerns?",
+      "title": "Lost in the Information Flood?",
+      "subtitle": "Finding it hard to keep up?",
+      "problem1": {
+        "title": "Time Shortage",
+        "description": "So much to read, but time is always running out."
+      },
+      "problem2": {
+        "title": "Information Overload",
+        "description": "Easy to miss important content in too much information."
+      },
+      "problem3": {
+        "title": "Declining Focus",
+        "description": "Concentration drops when reading long texts, missing key points."
+      },
+      "quote": {
+        "question": "How do you digest the daily information flood?",
+        "answer": "SummaryGenie protects your valuable time."
+      }
+    },
+    "howItWorks": {
+      "title": "Simple to Use",
+      "subtitle": "Start smart web browsing in 3 easy steps",
+      "step1": {
+        "title": "Install Chrome Extension",
+        "description": "Download SummaryGenie from Chrome Web Store. It's free and takes just seconds."
+      },
+      "step2": {
+        "title": "Run on Web Pages",
+        "description": "Click the extension icon or use the shortcut on any page you want to read."
+      },
+      "step3": {
+        "title": "Get Instant Summaries",
+        "description": "AI summarizes the key points in 3 seconds. Ask questions freely."
+      },
+      "footer": {
+        "text": "Get started now. From installation to usage, it only takes 3 minutes.",
+        "cta": "Get Started Free"
+      }
+    },
+    "useCases": {
+      "title": "Who Uses It?",
+      "subtitle": "People across various fields are saving time",
+      "case1": {
+        "title": "Students & Researchers",
+        "description": "Quickly grasp papers, reports, and academic materials, focusing only on essentials.",
+        "benefit1": "Reduce exam prep time",
+        "benefit2": "Efficient paper reviews",
+        "benefit3": "Fast reference understanding"
+      },
+      "case2": {
+        "title": "Professionals & Workers",
+        "description": "Quickly understand work documents, reports, and technical documentation.",
+        "benefit1": "Save meeting prep time",
+        "benefit2": "Quickly catch industry trends",
+        "benefit3": "Efficient competitor analysis"
+      },
+      "case3": {
+        "title": "General Users",
+        "description": "Quickly read news, blogs, and articles to get only important information.",
+        "benefit1": "News curation",
+        "benefit2": "Fast trend catch-up",
+        "benefit3": "Efficient interest exploration"
+      },
+      "cta": {
+        "title": "Make Your Time More Valuable",
+        "subtitle": "If you need to read dozens of articles daily, save 2 hours per day with SummaryGenie.",
+        "stat1": {
+          "number": "2 Hours",
+          "label": "Average Time Saved"
+        },
+        "stat2": {
+          "number": "90%",
+          "label": "User Satisfaction"
+        },
+        "stat3": {
+          "number": "5 Min",
+          "label": "Learning Time"
+        }
+      }
+    },
     "pricing": {
       "title": "Simple, Transparent Pricing",
       "subtitle": "Upgrade or cancel anytime",
@@ -396,25 +494,6 @@
       "needHelp": "Still have questions?",
       "contactEmail": "support@summarygenie.app"
     },
-    "footer": {
-      "description": "Make your time more valuable with AI-powered web summarization",
-      "product": "Product",
-      "company": "Company",
-      "legal": "Legal",
-      "copyright": "© 2025 SummaryGenie. All rights reserved.",
-      "language": "🇺🇸 English",
-      "madeIn": "Made with ❤️ in Seoul"
-    }
-  },
-  "dashboard": {
-    "page": {
-      "userId": "User ID",
-      "emailVerified": "Email Verified",
-      "yes": "Yes",
-      "no": "No"
-    }
-  },
-  "marketing": {
     "finalCTA": {
       "title": "Get Started Today",
       "subtitle": "Thousands of users are already saving 2 hours every day with SummaryGenie",
@@ -442,104 +521,14 @@
         "freeTrial": "7-Day Free Trial"
       }
     },
-    "howItWorks": {
-      "title": "Simple to Use",
-      "subtitle": "Start smart web browsing in 3 easy steps",
-      "step1": {
-        "title": "Install Chrome Extension",
-        "description": "Download SummaryGenie from Chrome Web Store. It's free and takes just seconds."
-      },
-      "step2": {
-        "title": "Run on Web Pages",
-        "description": "Click the extension icon or use the shortcut on any page you want to read."
-      },
-      "step3": {
-        "title": "Get Instant Summaries",
-        "description": "AI summarizes the key points in 3 seconds. Ask questions freely."
-      },
-      "footer": {
-        "text": "Get started now. From installation to usage, it only takes 3 minutes.",
-        "cta": "Get Started Free"
-      }
-    },
-    "problemStatement": {
-      "badge": "Do you have these concerns?",
-      "title": "Lost in the Information Flood?",
-      "subtitle": "Finding it hard to keep up?",
-      "problem1": {
-        "title": "Time Shortage",
-        "description": "So much to read, but time is always running out."
-      },
-      "problem2": {
-        "title": "Information Overload",
-        "description": "Easy to miss important content in too much information."
-      },
-      "problem3": {
-        "title": "Declining Focus",
-        "description": "Concentration drops when reading long texts, missing key points."
-      },
-      "quote": {
-        "question": "How do you digest the daily information flood?",
-        "answer": "SummaryGenie protects your valuable time."
-      }
-    },
-    "useCases": {
-      "title": "Who Uses It?",
-      "subtitle": "People across various fields are saving time",
-      "case1": {
-        "title": "Students & Researchers",
-        "description": "Quickly grasp papers, reports, and academic materials, focusing only on essentials.",
-        "benefit1": "Reduce exam prep time",
-        "benefit2": "Efficient paper reviews",
-        "benefit3": "Fast reference understanding"
-      },
-      "case2": {
-        "title": "Professionals & Workers",
-        "description": "Quickly understand work documents, reports, and technical documentation.",
-        "benefit1": "Save meeting prep time",
-        "benefit2": "Quickly catch industry trends",
-        "benefit3": "Efficient competitor analysis"
-      },
-      "case3": {
-        "title": "General Users",
-        "description": "Quickly read news, blogs, and articles to get only important information.",
-        "benefit1": "News curation",
-        "benefit2": "Fast trend catch-up",
-        "benefit3": "Efficient interest exploration"
-      },
-      "cta": {
-        "title": "Make Your Time More Valuable",
-        "subtitle": "If you need to read dozens of articles daily, save 2 hours per day with SummaryGenie.",
-        "stat1": {
-          "number": "2 Hours",
-          "label": "Average Time Saved"
-        },
-        "stat2": {
-          "number": "90%",
-          "label": "User Satisfaction"
-        },
-        "stat3": {
-          "number": "5 Min",
-          "label": "Learning Time"
-        }
-      }
-    }
-  },
-  "auth": {
-    "errors": {
-      "errors": {
-      "wrongPassword": "Current password is incorrect.",
-      "emailInUse": "Email is already in use.",
-      "invalidEmailFormat": "Invalid email format.",
-      "recentLoginRequired": "Please sign in again for security.",
-      "weakPassword": "Password must be at least 6 characters.",
-      "userNotFound": "User not found.",
-      "tooManyRequests": "Too many attempts. Please try again later.",
-      "networkError": "Network error occurred.",
-      "popupClosed": "Login popup was closed.",
-      "popupCancelled": "Previous popup request was cancelled.",
-      "unknownError": "An unknown error occurred."
-      }
+    "footer": {
+      "description": "Make your time more valuable with AI-powered web summarization",
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "copyright": "© 2025 SummaryGenie. All rights reserved.",
+      "language": "🇺🇸 English",
+      "madeIn": "Made with ❤️ in Seoul"
     }
   }
 }
