@@ -43,6 +43,7 @@
   "auth": {
     "login": {
       "title": "Sign in to SummaryGenie",
+      "description": "Log in to SummaryGenie",
       "subtitle": "Sign in to access AI-powered web summarization",
       "emailLabel": "Email",
       "emailPlaceholder": "your@email.com",

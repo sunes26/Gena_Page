@@ -7,12 +7,10 @@ import useSWRInfinite from 'swr/infinite';
 import {
   collection,
   query,
-  where,
   orderBy,
   limit,
   startAfter,
   getDocs,
-  DocumentSnapshot,
   QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { getFirestoreInstance } from '@/lib/firebase/client';
@@ -44,6 +42,7 @@ interface PageData {
 /**
  * 사용자의 요약 기록을 조회하는 훅 (무한 스크롤 지원)
  * ✅ 서브컬렉션 구조: /users/{userId}/history
+ * ✅ deletedAt 필터링은 클라이언트에서 처리
  */
 export function useHistory(
   userId: string | null,
@@ -69,7 +68,7 @@ export function useHistory(
     return ['history', userId, searchTerm, domainFilter, pageSize, pageIndex, lastDocId];
   };
 
-  // ✅ fetcher 함수 - 명시적 타입 지정
+  // ✅ fetcher 함수 - deletedAt 쿼리 조건 제거
   const fetcher = async (
     key: [string, string, string, string, number, number, string | null],
     previousPageData?: PageData
@@ -78,19 +77,15 @@ export function useHistory(
 
     const db = getFirestoreInstance();
 
-    // 서브컬렉션 경로: /users/{userId}/history
+    // ✅ 서브컬렉션 경로: /users/{userId}/history
     const historyRef = collection(db, 'users', uid, 'history');
 
+    // ✅ where('deletedAt', '==', null) 제거!
+    // 대신 클라이언트 사이드에서 필터링
     let q = query(
       historyRef,
-      where('deletedAt', '==', null),
       orderBy('createdAt', 'desc')
     );
-
-    // 도메인 필터링
-    if (domain) {
-      q = query(q, where('metadata.domain', '==', domain));
-    }
 
     // ✅ previousPageData에서 lastDoc 가져와서 페이지네이션
     if (previousPageData?.lastDoc) {
@@ -112,7 +107,15 @@ export function useHistory(
       ...(doc.data() as HistoryDocument),
     }));
 
-    // ✅ 클라이언트 사이드 검색 (summary와 content 모두 검색)
+    // ✅ 1. deletedAt 필터링 (클라이언트 사이드)
+    results = results.filter((item) => !item.deletedAt);
+
+    // ✅ 2. 도메인 필터링 (클라이언트 사이드)
+    if (domain) {
+      results = results.filter((item) => item.metadata?.domain === domain);
+    }
+
+    // ✅ 3. 검색 필터링 (summary와 content 모두 검색)
     if (search) {
       const searchLower = search.toLowerCase();
       results = results.filter((item) => {
@@ -206,33 +209,62 @@ export function useHistory(
 }
 
 /**
- * 사용자의 총 요약 개수를 조회하는 훅
+ * ✅ 사용자의 총 요약 개수를 조회하는 훅 (loading 버그 수정!)
  * ✅ 서브컬렉션 구조: /users/{userId}/history
+ * ✅ 에러 핸들링 강화
  */
 export function useHistoryCount(userId: string | null) {
   const { data, error } = useSWR<number, Error>(
     userId ? ['history-count', userId] : null,
     async () => {
-      if (!userId) return 0;
+      if (!userId) {
+        console.log('⚠️ useHistoryCount: userId is null');
+        return 0;
+      }
 
-      const db = getFirestoreInstance();
+      try {
+        console.log('🔍 Counting history documents for:', userId);
+        
+        const db = getFirestoreInstance();
+        const historyRef = collection(db, 'users', userId, 'history');
 
-      const historyRef = collection(db, 'users', userId, 'history');
+        // ✅ 간단한 쿼리 (where 조건 제거)
+        const snapshot = await getDocs(historyRef);
+        
+        console.log(`📊 Total documents: ${snapshot.size}`);
+        
+        // ✅ 클라이언트 사이드에서 deletedAt 필터링
+        const validDocs = snapshot.docs.filter(
+          (doc) => !doc.data().deletedAt
+        );
 
-      const q = query(historyRef, where('deletedAt', '==', null));
+        const count = validDocs.length;
+        console.log(`✅ Valid history count: ${count}`);
 
-      const snapshot = await getDocs(q);
-      return snapshot.size;
+        return count;
+      } catch (err) {
+        console.error('❌ Failed to count history:', err);
+        
+        // ✅ 에러가 발생해도 0 반환 (로딩 무한 방지)
+        return 0;
+      }
     },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+      // ✅ 에러 발생 시 재시도 안 함
+      shouldRetryOnError: false,
+      // ✅ 에러 핸들러 추가
+      onError: (err) => {
+        console.error('❌ SWR error in useHistoryCount:', err);
+      },
     }
   );
 
+  // ✅✅✅ 핵심 수정: data가 0일 때도 로딩 false!
   return {
-    count: data || 0,
-    loading: !data && !error,
+    count: data ?? 0,
+    loading: typeof data === 'undefined' && !error,  // ✅ 수정!
     error: error || null,
   };
 }

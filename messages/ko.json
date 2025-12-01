@@ -47,6 +47,7 @@
       "emailLabel": "이메일",
       "emailPlaceholder": "your@email.com",
       "passwordLabel": "비밀번호",
+      "description": "SummaryGenie에 로그인하세요",
       "passwordPlaceholder": "••••••••",
       "or":"다른방법으로 로그인",
       "loginButton": "로그인",

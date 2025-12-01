@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const { total: monthlyTotal, loading: monthlyLoading } = useMonthlyUsage(userId);
   const { dailyStats, weeklyTotal, loading: statsLoading } = useRecentUsage(userId, 7);
 
+  // ✅ 모든 데이터가 로드될 때까지만 로딩 표시
   const isLoading = authLoading || historyLoading || countLoading || monthlyLoading || statsLoading;
 
   if (authLoading) {
@@ -68,7 +69,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* 통계 카드 그리드 */}
+      {/* ✅ 통계 카드 그리드 - 항상 표시 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatsCard
           title={t('dashboard.home.stats.monthlyUsage')}
@@ -98,7 +99,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* 빠른 액션 버튼 */}
+      {/* ✅ 빠른 액션 버튼 (Free 사용자만) */}
       {!isPremium && (
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
           <div className="flex items-start justify-between">
@@ -162,7 +163,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 차트와 최근 기록 */}
+      {/* ✅ 차트와 최근 기록 - 항상 표시 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 최근 7일 사용량 차트 */}
         <UsageChart data={dailyStats} loading={statsLoading} />
@@ -171,7 +172,7 @@ export default function DashboardPage() {
         <RecentHistory history={history} loading={historyLoading} />
       </div>
 
-      {/* 도움말 섹션 */}
+      {/* ✅ 도움말 섹션 - 항상 표시 */}
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-blue-900 mb-3">
           {t('dashboard.home.gettingStarted.title')}

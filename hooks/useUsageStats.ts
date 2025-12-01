@@ -54,30 +54,62 @@ export function useUsageStats(
   const { data, error } = useSWR(
     userId ? ['usage-stats', userId, actualStartDate, actualEndDate] : null,
     async () => {
-      if (!userId) return [];
+      if (!userId) {
+        console.log('⚠️ useUsageStats: userId is null');
+        return [];
+      }
 
-      const db = getFirestoreInstance();
-      
-      // ✅ 서브컬렉션 경로: /users/{userId}/daily
-      const dailyRef = collection(db, 'users', userId, 'daily');
-      
-      // ✅ userId 필터 제거 (이미 경로에 포함)
-      const q = query(
-        dailyRef,
-        where('date', '>=', actualStartDate),
-        where('date', '<=', actualEndDate),
-        orderBy('date', 'asc')
-      );
+      try {
+        const db = getFirestoreInstance();
+        
+        // ✅ 서브컬렉션 경로: /users/{userId}/daily
+        const dailyRef = collection(db, 'users', userId, 'daily');
+        
+        console.log('🔍 Querying daily stats:', {
+          userId,
+          path: `users/${userId}/daily`,
+          startDate: actualStartDate,
+          endDate: actualEndDate,
+        });
+        
+        // ✅ 복합 쿼리 (인덱스 필요)
+        const q = query(
+          dailyRef,
+          where('date', '>=', actualStartDate),
+          where('date', '<=', actualEndDate),
+          orderBy('date', 'asc')
+        );
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as DailyDocument[];
+        const snapshot = await getDocs(q);
+        
+        const results = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as DailyDocument[];
+
+        console.log('✅ Daily stats loaded:', {
+          count: results.length,
+          total: results.reduce((sum, stat) => sum + (stat.count || 0), 0),
+        });
+
+        return results;
+      } catch (err) {
+        console.error('❌ Failed to load daily stats:', err);
+        
+        // Firestore 인덱스 에러인 경우
+        if (err instanceof Error && err.message.includes('index')) {
+          console.error('⚠️ Firestore index required! Check the error message for the index creation link.');
+        }
+        
+        throw err;
+      }
     },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+      onError: (err) => {
+        console.error('❌ SWR error in useUsageStats:', err);
+      },
     }
   );
 

@@ -5,11 +5,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { getAuthInstance, getFirestoreInstance } from '@/lib/firebase/client';
+import { ensureUserProfile } from '@/lib/firebase/client-queries';
 
 /**
  * User Profile 타입 (Firestore users 컬렉션)
  */
 export interface UserProfile {
+  id: string;
   email: string;
   name: string | null;
   isPremium: boolean;
@@ -29,7 +31,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   isPremium: boolean;
   subscriptionPlan: 'free' | 'pro';
-  emailVerified: boolean; // ⭐ 추가
+  emailVerified: boolean;
   loading: boolean;
   error: Error | null;
 }
@@ -42,6 +44,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 /**
  * Auth Provider 컴포넌트
  * ✅ Firebase Auth + Firestore users 컬렉션 통합
+ * ✅ 로그인 시 사용자 프로필 자동 생성
  * ✅ emailVerified 상태 제공
  * 
  * @example
@@ -66,43 +69,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ✅ Firebase Auth 상태 변경 리스너
       const unsubscribeAuth = onAuthStateChanged(
         auth,
-        (authUser) => {
+        async (authUser) => {
           setUser(authUser);
           
-          // ✅ 로그인한 사용자가 있으면 users 컬렉션 실시간 리스너 설정
+          // ✅ 로그인한 사용자가 있으면 프로필 생성/업데이트 후 실시간 리스너 설정
           if (authUser) {
-            const userRef = doc(db, 'users', authUser.uid);
-            
-            unsubscribeProfile = onSnapshot(
-              userRef,
-              (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                  const data = docSnapshot.data() as UserProfile;
-                  setUserProfile(data);
-                  setError(null);
-                  console.log('✅ User profile loaded:', authUser.uid);
-                } else {
-                  // users 문서가 없으면 기본값 설정
-                  console.warn('User profile not found, using defaults');
-                  setUserProfile({
-                    email: authUser.email || '',
-                    name: authUser.displayName || null,
-                    isPremium: false,
-                    subscriptionPlan: 'free',
-                    emailVerified: authUser.emailVerified,
-                    photoURL: authUser.photoURL,
-                    createdAt: null,
-                    updatedAt: null,
-                  });
+            try {
+              // ✅ 1. 사용자 프로필 생성 (없을 경우에만)
+              console.log('🔄 Ensuring user profile for:', authUser.uid);
+              await ensureUserProfile(
+                authUser.uid,
+                authUser.email!,
+                authUser.displayName,
+                authUser.photoURL
+              );
+
+              // ✅ 2. Firestore 실시간 리스너 설정
+              const userRef = doc(db, 'users', authUser.uid);
+              
+              unsubscribeProfile = onSnapshot(
+                userRef,
+                (docSnapshot) => {
+                  if (docSnapshot.exists()) {
+                    const data = docSnapshot.data() as UserProfile;
+                    setUserProfile(data);
+                    setError(null);
+                    console.log('✅ User profile loaded:', authUser.uid);
+                  } else {
+                    // ⚠️ 프로필 생성 직후에는 이 분기가 실행될 수 있음
+                    console.warn('⚠️ User profile not found immediately after creation');
+                    setUserProfile({
+                      id: authUser.uid,
+                      email: authUser.email || '',
+                      name: authUser.displayName || null,
+                      isPremium: false,
+                      subscriptionPlan: 'free',
+                      emailVerified: authUser.emailVerified,
+                      photoURL: authUser.photoURL,
+                      createdAt: null,
+                      updatedAt: null,
+                    });
+                  }
+                  setLoading(false);
+                },
+                (err) => {
+                  console.error('❌ User profile listener error:', err);
+                  setError(err as Error);
+                  setLoading(false);
                 }
-                setLoading(false);
-              },
-              (err) => {
-                console.error('User profile listener error:', err);
-                setError(err as Error);
-                setLoading(false);
-              }
-            );
+              );
+            } catch (err) {
+              console.error('❌ Failed to ensure user profile:', err);
+              setError(err as Error);
+              setLoading(false);
+              
+              // ⚠️ 프로필 생성 실패 시에도 기본값 설정 (앱이 멈추지 않도록)
+              setUserProfile({
+                id: authUser.uid,
+                email: authUser.email || '',
+                name: authUser.displayName || null,
+                isPremium: false,
+                subscriptionPlan: 'free',
+                emailVerified: authUser.emailVerified,
+                photoURL: authUser.photoURL,
+                createdAt: null,
+                updatedAt: null,
+              });
+            }
           } else {
             // 로그아웃 시 초기화
             setUserProfile(null);
@@ -117,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         },
         (err) => {
-          console.error('Auth state change error:', err);
+          console.error('❌ Auth state change error:', err);
           setError(err as Error);
           setLoading(false);
         }
@@ -131,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       };
     } catch (err) {
-      console.error('AuthProvider initialization error:', err);
+      console.error('❌ AuthProvider initialization error:', err);
       setError(err as Error);
       setLoading(false);
     }
@@ -140,14 +173,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ✅ 계산된 값들
   const isPremium = userProfile?.isPremium || false;
   const subscriptionPlan = userProfile?.subscriptionPlan || 'free';
-  const emailVerified = user?.emailVerified || false; // ⭐ 추가
+  const emailVerified = user?.emailVerified || false;
 
   const value: AuthContextType = {
     user,
     userProfile,
     isPremium,
     subscriptionPlan,
-    emailVerified, // ⭐ 추가
+    emailVerified,
     loading,
     error,
   };

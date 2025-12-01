@@ -30,6 +30,7 @@ export default function StatsCard({
   color = 'blue',
   loading = false,
 }: StatsCardProps) {
+  // ✅ 로딩 스켈레톤
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6 animate-pulse">
@@ -43,6 +44,7 @@ export default function StatsCard({
     );
   }
 
+  // ✅ 항상 값 표시 (빈 상태 UI 제거)
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
       <div className="flex items-center justify-between mb-4">
