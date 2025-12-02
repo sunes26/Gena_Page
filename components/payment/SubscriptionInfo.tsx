@@ -28,6 +28,24 @@ export interface SubscriptionInfoProps {
 }
 
 /**
+ * ✅ Base URL 헬퍼 함수 (HTTPS 에러 방지)
+ */
+function getBaseUrl(): string {
+  // 1순위: 환경 변수 (명시적으로 http://localhost:3000 설정)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  // 2순위: window.location.origin (클라이언트에서만 사용 가능)
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  
+  // 3순위: 기본값
+  return 'http://localhost:3000';
+}
+
+/**
  * 구독 상태 배지 컴포넌트
  */
 function StatusBadge({ status }: { status: Subscription['status'] }) {
@@ -100,7 +118,7 @@ export function SubscriptionInfo({
   }
 
   /**
-   * 결제 수단 변경
+   * ✅ 결제 수단 변경 (환경 변수 기반 returnUrl 사용)
    */
   const handleUpdatePayment = async () => {
     const toastId = showLoading('결제 페이지로 이동 중...');
@@ -112,6 +130,11 @@ export function SubscriptionInfo({
         throw new Error('인증이 필요합니다.');
       }
 
+      const baseUrl = getBaseUrl();
+      const returnUrl = `${baseUrl}/subscription?payment_updated=true`;
+
+      console.log('🔗 Return URL:', returnUrl);
+
       const response = await fetch('/api/subscription/update-payment', {
         method: 'POST',
         headers: {
@@ -119,7 +142,7 @@ export function SubscriptionInfo({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          returnUrl: `${window.location.origin}/subscription?payment_updated=true`,
+          returnUrl,
         }),
       });
 
@@ -133,6 +156,7 @@ export function SubscriptionInfo({
 
       // Paddle 결제 수단 변경 페이지로 리다이렉트
       if (data.updateUrl) {
+        console.log('🚀 Redirecting to:', data.updateUrl);
         window.location.href = data.updateUrl;
       }
     } catch (error) {

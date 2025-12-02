@@ -36,7 +36,23 @@ export default function SubscriptionPage() {
   const [syncing, setSyncing] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
-  const FREE_LIMIT = 30;
+  const FREE_LIMIT = 3;
+
+  // ✅ 환경 변수 기반 Base URL (HTTPS 에러 방지)
+  const getBaseUrl = () => {
+    // 1순위: 환경 변수 (명시적으로 http://localhost:3000 설정)
+    if (process.env.NEXT_PUBLIC_APP_URL) {
+      return process.env.NEXT_PUBLIC_APP_URL;
+    }
+    
+    // 2순위: window.location.origin (클라이언트에서만 사용 가능)
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    
+    // 3순위: 기본값
+    return 'http://localhost:3000';
+  };
 
   useEffect(() => {
     if (!authLoading && !subscriptionLoading && isPremiumFromUsers !== isPro) {
@@ -187,6 +203,7 @@ export default function SubscriptionPage() {
     }
   };
 
+  // ✅ 수정: 환경 변수 기반 returnUrl 사용
   const handleUpdatePayment = async () => {
     if (!subscription?.paddleSubscriptionId) return;
 
@@ -199,6 +216,11 @@ export default function SubscriptionPage() {
         throw new Error(t('common.error'));
       }
 
+      const baseUrl = getBaseUrl();
+      const returnUrl = `${baseUrl}/subscription?payment_updated=true`;
+
+      console.log('🔗 Return URL:', returnUrl);
+
       const response = await fetch('/api/subscription/update-payment', {
         method: 'POST',
         headers: {
@@ -206,7 +228,7 @@ export default function SubscriptionPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          returnUrl: `${window.location.origin}/subscription?payment_updated=true`,
+          returnUrl,
         }),
       });
 
@@ -219,6 +241,7 @@ export default function SubscriptionPage() {
       dismissToast(toastId);
 
       if (data.updateUrl) {
+        console.log('🚀 Redirecting to:', data.updateUrl);
         window.location.href = data.updateUrl;
       }
 
@@ -294,7 +317,6 @@ export default function SubscriptionPage() {
                 {t('subscription.alerts.cancelScheduledTitle')}
               </h3>
               <p className="text-yellow-700 mb-3">
-                {/* ✅ 타입 에러 수정: undefined 체크 추가 */}
                 {t('subscription.alerts.cancelScheduledMessage', { 
                   days: daysUntilRenewal,
                   date: subscription.currentPeriodEnd.toLocaleDateString() || ''
@@ -567,7 +589,6 @@ export default function SubscriptionPage() {
             </h3>
             
             <p className="text-gray-600 mb-6">
-              {/* ✅ 타입 에러 수정: subscription 체크 추가 */}
               {t('subscription.cancelModal.message', { 
                 date: subscription.currentPeriodEnd.toLocaleDateString() || ''
               })}

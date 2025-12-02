@@ -61,7 +61,7 @@ export default function PricingPage() {
               price="무료"
               description="개인 사용자를 위한 기본 플랜"
               features={[
-                { name: '월 30회 요약', included: true },
+                { name: '월 3회 요약', included: true },
                 { name: '기본 AI 엔진', included: true },
                 { name: '요약 기록 저장', included: true },
                 { name: '검색 및 필터링', included: true },
@@ -121,7 +121,7 @@ export default function PricingPage() {
               />
               <FAQItem
                 question="Pro 플랜을 취소하면 데이터가 삭제되나요?"
-                answer="아니요, 요약 기록은 그대로 유지됩니다. Free 플랜으로 전환되어 월 30회까지 계속 사용할 수 있습니다."
+                answer="아니요, 요약 기록은 그대로 유지됩니다. Free 플랜으로 전환되어 월 3회까지 계속 사용할 수 있습니다."
               />
             </div>
           </section>
