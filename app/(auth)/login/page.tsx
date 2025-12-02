@@ -1,6 +1,7 @@
 // app/(auth)/login/page.tsx
 'use client';
 
+import { Suspense } from 'react';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -17,35 +18,30 @@ function ErrorIcon({ type }: { type: AuthErrorType }) {
   
   switch (type) {
     case 'credential':
-      // 자물쇠 아이콘 (이메일/비밀번호 오류)
       return (
         <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
       );
     case 'email':
-      // 이메일 아이콘
       return (
         <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       );
     case 'network':
-      // 와이파이 아이콘
       return (
         <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
         </svg>
       );
     case 'popup':
-      // 팝업 아이콘
       return (
         <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
       );
     default:
-      // 경고 아이콘
       return (
         <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -70,20 +66,19 @@ function getErrorStyles(type: AuthErrorType): string {
   }
 }
 
-export default function LoginPage() {
+// ✅ useSearchParams를 사용하는 실제 로그인 컴포넌트 (분리)
+function LoginFormContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState('');
   const [error, setError] = useState('');
   const [errorType, setErrorType] = useState<AuthErrorType>('unknown');
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // ✅ 여기서 useSearchParams 사용
   const redirect = searchParams.get('redirect') || '/dashboard';
   
-  // ✅ 다국어 지원
   const { t } = useTranslation();
 
-  // ✅ 에러 설정 헬퍼 함수
   const handleError = (err: any) => {
     console.error('Auth error:', err);
     const errorKey = getAuthErrorKey(err);
@@ -92,13 +87,11 @@ export default function LoginPage() {
     setErrorType(type);
   };
 
-  // ✅ 에러 초기화
   const clearError = () => {
     setError('');
     setErrorType('unknown');
   };
 
-  // ✅ users 문서 확인 및 생성 (마이그레이션 목적)
   const ensureUserProfile = async (userId: string, userEmail: string, userName?: string) => {
     try {
       const db = getFirestoreInstance();
@@ -106,7 +99,6 @@ export default function LoginPage() {
       const userDoc = await getDoc(userRef);
 
       if (!userDoc.exists()) {
-        // users 문서가 없으면 생성
         console.log('Creating user profile for existing user:', userId);
         
         await setDoc(userRef, {
@@ -114,7 +106,7 @@ export default function LoginPage() {
           name: userName || null,
           isPremium: false,
           subscriptionPlan: 'free',
-          emailVerified: true, // 로그인 성공했으므로 true
+          emailVerified: true,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -125,7 +117,6 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Failed to ensure user profile:', error);
-      // 에러가 나도 계속 진행
     }
   };
 
@@ -134,7 +125,6 @@ export default function LoginPage() {
     setLoading('email');
     clearError();
 
-    // 클라이언트 측 유효성 검사
     if (!email.trim()) {
       setError(t('auth.errors.invalidEmail'));
       setErrorType('email');
@@ -150,22 +140,16 @@ export default function LoginPage() {
     }
 
     try {
-      // 1. Firebase Auth로 로그인
       const userCredential = await signInWithEmail(email, password);
       const userId = userCredential.user.uid;
       const userEmail = userCredential.user.email || '';
       const userName = userCredential.user.displayName || undefined;
 
-      // 2. ✅ users 문서 확인 및 생성
       await ensureUserProfile(userId, userEmail, userName);
 
-      // 3. ID 토큰 가져오기
       const idToken = await userCredential.user.getIdToken();
-
-      // 4. 세션 쿠키 생성
       await createSession(idToken);
 
-      // 5. 리다이렉트
       router.push(redirect);
       router.refresh();
     } catch (error: any) {
@@ -180,22 +164,16 @@ export default function LoginPage() {
     clearError();
 
     try {
-      // 1. Google로 로그인
       const userCredential = await signInWithGoogle();
       const userId = userCredential.user.uid;
       const userEmail = userCredential.user.email || '';
       const userName = userCredential.user.displayName || undefined;
 
-      // 2. ✅ users 문서 확인 및 생성
       await ensureUserProfile(userId, userEmail, userName);
 
-      // 3. ID 토큰 가져오기
       const idToken = await userCredential.user.getIdToken();
-
-      // 4. 세션 쿠키 생성
       await createSession(idToken);
 
-      // 5. 리다이렉트
       router.push(redirect);
       router.refresh();
     } catch (error: any) {
@@ -206,201 +184,218 @@ export default function LoginPage() {
   };
 
   return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-center mb-6">
+          {t('auth.login.title')}
+        </h1>
+
+        <p className="text-center text-gray-600 mb-6 text-sm">
+          {t('auth.login.subtitle')}
+        </p>
+
+        {error && (
+          <div 
+            className={`mb-4 p-4 border rounded-lg flex items-start gap-3 ${getErrorStyles(errorType)}`}
+            role="alert"
+            aria-live="polite"
+          >
+            <ErrorIcon type={errorType} />
+            <div className="flex-1">
+              <p className="text-sm font-medium">{error}</p>
+              {errorType === 'credential' && (
+                <p className="text-xs mt-1 opacity-80">
+                  <Link href="/forgot-password" className="underline hover:no-underline">
+                    {t('auth.login.forgotPassword')}
+                  </Link>
+                </p>
+              )}
+              {errorType === 'network' && (
+                <p className="text-xs mt-1 opacity-80">
+                  인터넷 연결을 확인 후 다시 시도해주세요.
+                </p>
+              )}
+            </div>
+            <button 
+              onClick={clearError}
+              className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+              aria-label="에러 메시지 닫기"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleEmailLogin} className="space-y-4">
+          <div>
+            <label 
+              htmlFor="email" 
+              className="block text-sm font-medium mb-1"
+            >
+              {t('auth.login.emailLabel')}
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error && errorType === 'email') clearError();
+              }}
+              required
+              autoComplete="email"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                error && errorType === 'email' 
+                  ? 'border-orange-400 bg-orange-50' 
+                  : 'border-gray-300'
+              }`}
+              placeholder="your@email.com"
+              aria-describedby="email-help"
+              aria-invalid={error && errorType === 'email' ? 'true' : 'false'}
+            />
+          </div>
+
+          <div>
+            <label 
+              htmlFor="password" 
+              className="block text-sm font-medium mb-1"
+            >
+              {t('auth.login.passwordLabel')}
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error && errorType === 'credential') clearError();
+              }}
+              required
+              autoComplete="current-password"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                error && errorType === 'credential' 
+                  ? 'border-red-400 bg-red-50' 
+                  : 'border-gray-300'
+              }`}
+              placeholder="••••••••"
+              aria-invalid={error && errorType === 'credential' ? 'true' : 'false'}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading === 'email'}
+            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+            aria-busy={loading === 'email'}
+          >
+            {loading === 'email' && (
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            )}
+            {loading === 'email' ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
+          </button>
+        </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">{t('auth.login.or')}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading === 'google'}
+          className="w-full py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+          aria-busy={loading === 'google'}
+          aria-label={t('auth.login.googleLogin')}
+        >
+          {loading === 'google' ? (
+            <svg className="animate-spin h-5 w-5 text-gray-500" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+          )}
+          {loading === 'google' ? t('auth.login.googleLoggingIn') : t('auth.login.googleLogin')}
+        </button>
+
+        <nav className="mt-6 space-y-2">
+          <p className="text-center text-sm text-gray-600">
+            {t('auth.login.noAccount')}{' '}
+            <Link 
+              href="/signup" 
+              className="text-blue-600 hover:underline font-medium"
+            >
+              {t('auth.login.signup')}
+            </Link>
+          </p>
+
+          <p className="text-center text-sm text-gray-600">
+            <Link 
+              href="/forgot-password" 
+              className="text-blue-600 hover:underline"
+            >
+              {t('auth.login.forgotPassword')}
+            </Link>
+          </p>
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+// ✅ 메인 페이지: Suspense로 LoginFormContent 감싸기
+export default function LoginPage() {
+  const { t } = useTranslation();
+
+  return (
     <>
-      {/* ✅ 동적 메타데이터 설정 */}
       <DynamicMeta
         title={t('auth.login.title')}
         description={t('auth.login.description')}
         keywords="로그인, 로그인 페이지, Gena 로그인"
       />
-
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-          {/* ✅ SEO: h1 태그로 페이지 제목 명시 */}
-          <h1 className="text-2xl font-bold text-center mb-6">
-            {t('auth.login.title')}
-          </h1>
-
-          {/* ✅ SEO: 설명 추가 (선택사항) */}
-          <p className="text-center text-gray-600 mb-6 text-sm">
-            {t('auth.login.subtitle')}
-          </p>
-
-          {/* ✅ 개선된 에러 표시 */}
-          {error && (
-            <div 
-              className={`mb-4 p-4 border rounded-lg flex items-start gap-3 ${getErrorStyles(errorType)}`}
-              role="alert"
-              aria-live="polite"
-            >
-              <ErrorIcon type={errorType} />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{error}</p>
-                {/* 에러 타입에 따른 추가 안내 */}
-                {errorType === 'credential' && (
-                  <p className="text-xs mt-1 opacity-80">
-                    <Link href="/forgot-password" className="underline hover:no-underline">
-                      {t('auth.login.forgotPassword')}
-                    </Link>
-                  </p>
-                )}
-                {errorType === 'network' && (
-                  <p className="text-xs mt-1 opacity-80">
-                    인터넷 연결을 확인 후 다시 시도해주세요.
-                  </p>
-                )}
-              </div>
-              {/* 닫기 버튼 */}
-              <button 
-                onClick={clearError}
-                className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="에러 메시지 닫기"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          <form onSubmit={handleEmailLogin} className="space-y-4">
-            <div>
-              <label 
-                htmlFor="email" 
-                className="block text-sm font-medium mb-1"
-              >
-                {t('auth.login.emailLabel')}
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error && errorType === 'email') clearError();
-                }}
-                required
-                autoComplete="email"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  error && errorType === 'email' 
-                    ? 'border-orange-400 bg-orange-50' 
-                    : 'border-gray-300'
-                }`}
-                placeholder="your@email.com"
-                aria-describedby="email-help"
-                aria-invalid={error && errorType === 'email' ? 'true' : 'false'}
-              />
-            </div>
-
-            <div>
-              <label 
-                htmlFor="password" 
-                className="block text-sm font-medium mb-1"
-              >
-                {t('auth.login.passwordLabel')}
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (error && errorType === 'credential') clearError();
-                }}
-                required
-                autoComplete="current-password"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  error && errorType === 'credential' 
-                    ? 'border-red-400 bg-red-50' 
-                    : 'border-gray-300'
-                }`}
-                placeholder="••••••••"
-                aria-invalid={error && errorType === 'credential' ? 'true' : 'false'}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading === 'email'}
-              className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-              aria-busy={loading === 'email'}
-            >
-              {loading === 'email' && (
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-              )}
-              {loading === 'email' ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
-            </button>
-          </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">{t('auth.login.or')}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading === 'google'}
-            className="w-full py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-            aria-busy={loading === 'google'}
-            aria-label={t('auth.login.googleLogin')}
-          >
-            {loading === 'google' ? (
-              <svg className="animate-spin h-5 w-5 text-gray-500" viewBox="0 0 24 24">
+      
+      <Suspense 
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-            ) : (
-              <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-            )}
-            {loading === 'google' ? t('auth.login.googleLoggingIn') : t('auth.login.googleLogin')}
-          </button>
-
-          <nav className="mt-6 space-y-2">
-            <p className="text-center text-sm text-gray-600">
-              {t('auth.login.noAccount')}{' '}
-              <Link 
-                href="/signup" 
-                className="text-blue-600 hover:underline font-medium"
-              >
-                {t('auth.login.signup')}
-              </Link>
-            </p>
-
-            <p className="text-center text-sm text-gray-600">
-              <Link 
-                href="/forgot-password" 
-                className="text-blue-600 hover:underline"
-              >
-                {t('auth.login.forgotPassword')}
-              </Link>
-            </p>
-          </nav>
-        </div>
-      </div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        }
+      >
+        <LoginFormContent />
+      </Suspense>
     </>
   );
 }

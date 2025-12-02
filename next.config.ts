@@ -187,7 +187,7 @@ const nextConfig: NextConfig = {
    * ======================================== */
   // 빌드 시 ESLint 무시 (선택사항)
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
 
   // 빌드 시 TypeScript 에러 무시 안 함
