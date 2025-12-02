@@ -11,28 +11,82 @@ interface AdminConfig {
 }
 
 /**
+ * Private Key 파싱 및 정리
+ * Vercel 환경 변수에서 가져온 키를 안전하게 처리
+ */
+const parsePrivateKey = (rawKey: string): string => {
+  // 1. 앞뒤 공백 제거
+  let key = rawKey.trim();
+
+  // 2. 따옴표 제거 (있다면)
+  if ((key.startsWith('"') && key.endsWith('"')) || 
+      (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1);
+  }
+
+  // 3. 이스케이프된 줄바꿈을 실제 줄바꿈으로 변환
+  key = key.replace(/\\n/g, '\n');
+
+  // 4. 키 유효성 검증
+  if (!key.includes('BEGIN PRIVATE KEY') || !key.includes('END PRIVATE KEY')) {
+    throw new Error(
+      'Invalid private key format. ' +
+      'Key must contain BEGIN PRIVATE KEY and END PRIVATE KEY markers.'
+    );
+  }
+
+  return key;
+};
+
+/**
  * 환경 변수에서 Admin SDK 설정 가져오기
  */
 const getAdminConfig = (): AdminConfig => {
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  const privateKeyRaw = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
-  if (!projectId || !clientEmail || !privateKey) {
+  // 환경 변수 존재 여부 확인
+  if (!projectId || !clientEmail || !privateKeyRaw) {
+    const missing = [];
+    if (!projectId) missing.push('FIREBASE_ADMIN_PROJECT_ID');
+    if (!clientEmail) missing.push('FIREBASE_ADMIN_CLIENT_EMAIL');
+    if (!privateKeyRaw) missing.push('FIREBASE_ADMIN_PRIVATE_KEY');
+
     throw new Error(
-      'Missing Firebase Admin SDK credentials.\n' +
-      'Required environment variables:\n' +
-      '- FIREBASE_ADMIN_PROJECT_ID\n' +
-      '- FIREBASE_ADMIN_CLIENT_EMAIL\n' +
-      '- FIREBASE_ADMIN_PRIVATE_KEY'
+      `Missing Firebase Admin SDK credentials: ${missing.join(', ')}\n` +
+      'Please check your environment variables in Vercel Dashboard.'
+    );
+  }
+
+  // Private Key 파싱
+  let privateKey: string;
+  try {
+    privateKey = parsePrivateKey(privateKeyRaw);
+  } catch (error) {
+    console.error('Private key parsing error:', error);
+    throw new Error(
+      'Failed to parse FIREBASE_ADMIN_PRIVATE_KEY. ' +
+      'Please ensure the key is properly formatted in Vercel environment variables. ' +
+      'Remove any surrounding quotes and use \\n for line breaks.'
+    );
+  }
+
+  // 디버그 정보 (민감한 정보는 제외)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📋 Firebase Admin Config:');
+    console.log('  Project ID:', projectId);
+    console.log('  Client Email:', clientEmail);
+    console.log('  Private Key Length:', privateKey.length);
+    console.log('  Private Key Format:', 
+      privateKey.includes('BEGIN PRIVATE KEY') ? '✅ Valid' : '❌ Invalid'
     );
   }
 
   return {
     projectId,
     clientEmail,
-    // Private key에서 \n 이스케이프 문자를 실제 줄바꿈으로 변환
-    privateKey: privateKey.replace(/\\n/g, '\n'),
+    privateKey,
   };
 };
 
@@ -52,7 +106,9 @@ export const initializeAdmin = (): App => {
   // 기존 앱이 있으면 재사용
   if (existingApps.length > 0) {
     adminApp = existingApps[0];
-    console.log('✅ Using existing Firebase Admin instance');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Using existing Firebase Admin instance');
+    }
     return adminApp;
   }
 
@@ -70,9 +126,24 @@ export const initializeAdmin = (): App => {
     });
 
     console.log('✅ Firebase Admin initialized successfully');
+    console.log('   Project:', config.projectId);
+    
     return adminApp;
   } catch (error) {
     console.error('❌ Firebase Admin initialization error:', error);
+    
+    // 더 자세한 에러 메시지
+    if (error instanceof Error) {
+      if (error.message.includes('DECODER')) {
+        throw new Error(
+          'Private key decoding failed. ' +
+          'This usually means the key format is incorrect. ' +
+          'In Vercel, remove quotes from FIREBASE_ADMIN_PRIVATE_KEY and ensure \\n is used for line breaks.'
+        );
+      }
+      throw error;
+    }
+    
     throw new Error(`Failed to initialize Firebase Admin: ${error}`);
   }
 };
@@ -100,9 +171,9 @@ export const getAdminFirestore = (): Firestore => {
     const app = initializeAdmin();
     adminDb = getFirestore(app);
     
-    // Firestore 설정 (선택사항)
+    // Firestore 설정
     adminDb.settings({
-      ignoreUndefinedProperties: true, // undefined 값 무시
+      ignoreUndefinedProperties: true,
     });
   }
   return adminDb;
@@ -117,17 +188,10 @@ export const getCollection = (collectionName: string) => {
 };
 
 /**
- * history 컬렉션 참조
+ * users 컬렉션 참조
  */
-export const getHistoryCollection = () => {
-  return getCollection('history');
-};
-
-/**
- * daily 컬렉션 참조
- */
-export const getDailyCollection = () => {
-  return getCollection('daily');
+export const getUsersCollection = () => {
+  return getCollection('users');
 };
 
 /**
@@ -135,6 +199,13 @@ export const getDailyCollection = () => {
  */
 export const getSubscriptionCollection = () => {
   return getCollection('subscription');
+};
+
+/**
+ * webhook_events 컬렉션 참조
+ */
+export const getWebhookEventsCollection = () => {
+  return getCollection('webhook_events');
 };
 
 // Export instances
