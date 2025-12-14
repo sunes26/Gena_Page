@@ -1,5 +1,5 @@
 // app/layout.tsx
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -15,13 +15,26 @@ const notoSansKr = Noto_Sans_KR({
   variable: '--font-noto-sans-kr',
 });
 
-// ✅ 기본 메타데이터
-export const metadata: Metadata = genMeta({
-  title: 'Gena - AI 웹페이지 요약',
-  description: '웹 서핑 시간은 절반으로, 정보의 깊이는 두 배로. Chrome 확장 프로그램으로 한 번의 클릭으로 웹페이지를 AI가 요약합니다.',
-  keywords: ['AI 요약', '웹페이지 요약', '크롬 확장프로그램', 'Chrome extension'],
-  canonical: '/',
-});
+// ✅ 기본 메타데이터 (한국어 기본)
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://gena.app'),
+  ...genMeta({
+    canonical: '/',
+    locale: 'ko', // 기본 언어는 한국어
+  }),
+};
+
+// ✅ Viewport 설정 (SEO & Mobile 최적화)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+};
 
 export default function RootLayout({
   children,

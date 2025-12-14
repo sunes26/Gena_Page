@@ -79,7 +79,7 @@ function LoginFormContent() {
   
   const { t } = useTranslation();
 
-  const handleError = (err: any) => {
+  const handleError = (err: unknown) => {
     console.error('Auth error:', err);
     const errorKey = getAuthErrorKey(err);
     const type = getAuthErrorType(err);
@@ -152,7 +152,7 @@ function LoginFormContent() {
 
       router.push(redirect);
       router.refresh();
-    } catch (error: any) {
+    } catch (error) {
       handleError(error);
     } finally {
       setLoading(false);
@@ -188,7 +188,7 @@ function LoginFormContent() {
               )}
               {errorType === 'network' && (
                 <p className="text-xs mt-1 opacity-80">
-                  인터넷 연결을 확인 후 다시 시도해주세요.
+                  {t('auth.errors.networkError')}
                 </p>
               )}
             </div>

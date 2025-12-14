@@ -7,6 +7,7 @@ import { useMonthlyUsage, useRecentUsage } from '@/hooks/useUsageStats';
 import StatsCard from '@/components/dashboard/StatsCard';
 import UsageChart from '@/components/dashboard/UsageChart';
 import RecentHistory from '@/components/dashboard/RecentHistory';
+import UsageWarningBanner from '@/components/dashboard/UsageWarningBanner';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   TrendingUp,
@@ -68,6 +69,11 @@ export default function DashboardPage() {
           {t('dashboard.home.greeting', { name: user.displayName || t('common.name') })}
         </p>
       </div>
+
+      {/* ✅ 사용량 경고 배너 (무료 사용자만) */}
+      {!isPremium && !isLoading && (
+        <UsageWarningBanner currentUsage={monthlyTotal} />
+      )}
 
       {/* ✅ 통계 카드 그리드 - 항상 표시 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

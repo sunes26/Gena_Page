@@ -10,6 +10,9 @@ import { PaddleCheckout } from '@/components/payment/PaddleCheckout';
 import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast-helpers';
 import { getIdToken } from '@/lib/auth';
 import { useTranslation } from '@/hooks/useTranslation';
+import { USAGE_LIMITS } from '@/lib/constants';
+import { SubscriptionCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { formatCurrency } from '@/lib/currency';
 import { RefreshCw } from 'lucide-react';
 
 export default function SubscriptionPage() {
@@ -35,8 +38,6 @@ export default function SubscriptionPage() {
   const [canceling, setCanceling] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-
-  const FREE_LIMIT = 3;
 
   // ✅ 환경 변수 기반 Base URL (HTTPS 에러 방지)
   const getBaseUrl = () => {
@@ -66,11 +67,24 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     const success = searchParams.get('success');
-    
+    const paymentUpdated = searchParams.get('payment_updated');
+
     if (success === 'true' && !showSuccessAlert) {
       setShowSuccessAlert(true);
       showSuccess(t('subscription.alerts.successMessage'));
-      
+
+      const timer = setTimeout(() => {
+        const newUrl = window.location.pathname;
+        router.replace(newUrl);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+
+    if (paymentUpdated === 'true' && !showSuccessAlert) {
+      setShowSuccessAlert(true);
+      showSuccess('결제 수단이 성공적으로 업데이트되었습니다.');
+
       const timer = setTimeout(() => {
         const newUrl = window.location.pathname;
         router.replace(newUrl);
@@ -82,11 +96,11 @@ export default function SubscriptionPage() {
 
   const handleSyncSubscription = async () => {
     setSyncing(true);
-    const toastId = showLoading(t('subscription.syncing'));
+    const toastId = showLoading('구독 정보를 Paddle과 동기화하는 중...');
 
     try {
       const token = await getIdToken();
-      
+
       if (!token) {
         throw new Error(t('common.error'));
       }
@@ -105,7 +119,7 @@ export default function SubscriptionPage() {
       }
 
       dismissToast(toastId);
-      showSuccess(data.message || t('common.success'));
+      showSuccess('✅ 구독 정보가 성공적으로 동기화되었습니다.');
 
       setTimeout(() => {
         window.location.reload();
@@ -251,13 +265,18 @@ export default function SubscriptionPage() {
     }
   };
 
+  // ✅ 로딩 상태 - 스켈레톤 UI로 개선
   if (authLoading || subscriptionLoading || usageLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('common.loading')}</p>
+      <div className="space-y-6">
+        {/* 헤더 스켈레톤 */}
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
         </div>
+
+        {/* 구독 카드 스켈레톤 */}
+        <SubscriptionCardSkeleton />
       </div>
     );
   }
@@ -349,9 +368,21 @@ export default function SubscriptionPage() {
               <p className="text-red-700 mb-3">
                 {t('subscription.alerts.pastDueMessage')}
               </p>
+
+              {/* 상세 안내 */}
+              <div className="bg-white/70 rounded-lg p-3 mb-4 text-sm text-red-800">
+                <p className="font-medium mb-2">⏰ 결제 재시도 안내:</p>
+                <ul className="space-y-1 ml-4">
+                  <li>• Paddle이 자동으로 결제를 재시도합니다</li>
+                  <li>• 유예 기간 동안 Pro 기능을 계속 사용하실 수 있습니다</li>
+                  <li>• 결제 수단을 업데이트하시면 즉시 해결됩니다</li>
+                  <li>• 재시도 실패 시 구독이 취소될 수 있습니다</li>
+                </ul>
+              </div>
+
               <button
                 onClick={handleUpdatePayment}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
               >
                 {t('subscription.alerts.updatePaymentButton')}
               </button>
@@ -382,16 +413,16 @@ export default function SubscriptionPage() {
                 {t('subscription.free.usageTitle')}
               </span>
               <span className="text-lg font-bold text-gray-900">
-                {t('subscription.free.usageLimit', { current: monthlyTotal, limit: FREE_LIMIT })}
+                {t('subscription.free.usageLimit', { current: monthlyTotal, limit: USAGE_LIMITS.FREE_MONTHLY_LIMIT })}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min((monthlyTotal / FREE_LIMIT) * 100, 100)}%` }}
+                style={{ width: `${Math.min((monthlyTotal / USAGE_LIMITS.FREE_MONTHLY_LIMIT) * 100, 100)}%` }}
               />
             </div>
-            {monthlyTotal >= FREE_LIMIT && (
+            {monthlyTotal >= USAGE_LIMITS.FREE_MONTHLY_LIMIT && (
               <p className="text-sm text-red-600 mt-2">
                 {t('subscription.free.usageFull')}
               </p>
@@ -482,7 +513,9 @@ export default function SubscriptionPage() {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">₩{subscription.price.toLocaleString()}</p>
+              <p className="text-2xl font-bold">
+                {formatCurrency(subscription.price, subscription.currency)}
+              </p>
               <p className="text-sm text-gray-600">{subscription.currency}/월</p>
             </div>
           </div>
@@ -506,7 +539,7 @@ export default function SubscriptionPage() {
             <div className="flex justify-between p-3 bg-gray-50 rounded">
               <span className="text-gray-600">{t('subscription.pro.amount')}</span>
               <span className="font-medium">
-                ₩{subscription.price.toLocaleString()} / 월
+                {formatCurrency(subscription.price, subscription.currency)} / 월
               </span>
             </div>
 
@@ -587,12 +620,25 @@ export default function SubscriptionPage() {
             <h3 className="text-xl font-bold mb-4">
               {t('subscription.cancelModal.title')}
             </h3>
-            
-            <p className="text-gray-600 mb-6">
-              {t('subscription.cancelModal.message', { 
+
+            <p className="text-gray-600 mb-4">
+              {t('subscription.cancelModal.message', {
                 date: subscription.currentPeriodEnd.toLocaleDateString() || ''
               })}
             </p>
+
+            {/* 데이터 보관 안내 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h4 className="text-sm font-semibold text-blue-900 mb-2">
+                ✅ 취소 후에도 데이터는 안전하게 보관됩니다
+              </h4>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• 모든 요약 기록은 계정에 그대로 유지됩니다</li>
+                <li>• {subscription.currentPeriodEnd.toLocaleDateString()}까지 Pro 기능 사용 가능</li>
+                <li>• 언제든지 다시 구독을 재개할 수 있습니다</li>
+                <li>• 구독 종료 후 무료 플랜으로 자동 전환됩니다</li>
+              </ul>
+            </div>
 
             <div className="space-y-3">
               <button
@@ -602,7 +648,7 @@ export default function SubscriptionPage() {
               >
                 {canceling ? t('subscription.cancelModal.processing') : t('subscription.cancelModal.confirmButton')}
               </button>
-              
+
               <button
                 onClick={() => setShowCancelModal(false)}
                 disabled={canceling}

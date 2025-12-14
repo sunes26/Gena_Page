@@ -4,6 +4,17 @@
  * Paddle Billing API를 사용하여 서버에서 구독 관리
  */
 
+import crypto from 'crypto';
+import {
+  validatePaddleResponse,
+  SubscriptionResponseSchema,
+  TransactionResponseSchema,
+  CustomerSubscriptionsResponseSchema,
+  UpdatePaymentMethodResponseSchema,
+  type PaddleSubscription as ValidatedPaddleSubscription,
+  type PaddleTransaction as ValidatedPaddleTransaction,
+} from './paddle-validation';
+
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY || '';
 const PADDLE_ENVIRONMENT = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox';
 
@@ -58,42 +69,15 @@ async function paddleRequest<T>(
 
 /**
  * Paddle Subscription 타입
+ * ✅ Now uses validated types from paddle-validation.ts
  */
-export interface PaddleSubscription {
-  id: string;
-  status: 'active' | 'canceled' | 'past_due' | 'paused' | 'trialing';
-  customer_id: string;
-  custom_data: Record<string, any>;
-  current_billing_period: {
-    starts_at: string;
-    ends_at: string;
-  };
-  next_billed_at: string | null;
-  created_at: string;
-  updated_at: string;
-  scheduled_change: {
-    action: 'cancel' | 'pause' | 'resume';
-    effective_at: string;
-    resume_at?: string;
-  } | null;
-  items: Array<{
-    price_id: string;
-    quantity: number;
-  }>;
-}
+export type PaddleSubscription = ValidatedPaddleSubscription;
 
 /**
  * Paddle Transaction 타입
+ * ✅ Now uses validated types from paddle-validation.ts
  */
-export interface PaddleTransaction {
-  id: string;
-  status: string;
-  checkout: {
-    url: string | null;
-  };
-  customer_id: string | null;
-  created_at: string;
-}
+export type PaddleTransaction = ValidatedPaddleTransaction;
 
 /**
  * Paddle Transaction (Checkout) 생성
@@ -103,7 +87,7 @@ export interface CreateTransactionOptions {
   userId: string;
   userEmail?: string;
   successUrl?: string;
-  customData?: Record<string, any>;
+  customData?: Record<string, unknown>;
 }
 
 export async function createPaddleTransaction(
@@ -148,7 +132,14 @@ export async function createPaddleTransaction(
     }
   );
 
-  return response.data;
+  // ✅ Security: Validate response structure
+  const validatedResponse = validatePaddleResponse(
+    TransactionResponseSchema,
+    response,
+    'Create Transaction Response'
+  );
+
+  return validatedResponse.data;
 }
 
 /**
@@ -164,7 +155,14 @@ export async function getPaddleSubscription(
     }
   );
 
-  return response.data;
+  // ✅ Security: Validate response structure
+  const validatedResponse = validatePaddleResponse(
+    SubscriptionResponseSchema,
+    response,
+    'Get Subscription Response'
+  );
+
+  return validatedResponse.data;
 }
 
 /**
@@ -189,7 +187,14 @@ export async function cancelPaddleSubscription(
     }
   );
 
-  return response.data;
+  // ✅ Security: Validate response structure
+  const validatedResponse = validatePaddleResponse(
+    SubscriptionResponseSchema,
+    response,
+    'Cancel Subscription Response'
+  );
+
+  return validatedResponse.data;
 }
 
 /**
@@ -211,7 +216,14 @@ export async function resumePaddleSubscription(
     }
   );
 
-  return response.data;
+  // ✅ Security: Validate response structure
+  const validatedResponse = validatePaddleResponse(
+    SubscriptionResponseSchema,
+    response,
+    'Resume Subscription Response'
+  );
+
+  return validatedResponse.data;
 }
 
 /**
@@ -227,7 +239,7 @@ export async function cancelScheduledChange(
   subscriptionId: string
 ): Promise<PaddleSubscription> {
   console.log(`🔄 Canceling scheduled change for subscription: ${subscriptionId}`);
-  
+
   const response = await paddleRequest<{ data: PaddleSubscription }>(
     `/subscriptions/${subscriptionId}`,
     {
@@ -238,8 +250,15 @@ export async function cancelScheduledChange(
     }
   );
 
+  // ✅ Security: Validate response structure
+  const validatedResponse = validatePaddleResponse(
+    SubscriptionResponseSchema,
+    response,
+    'Cancel Scheduled Change Response'
+  );
+
   console.log(`✅ Scheduled change canceled for subscription: ${subscriptionId}`);
-  return response.data;
+  return validatedResponse.data;
 }
 
 /**
@@ -254,7 +273,14 @@ export async function getCustomerSubscriptions(
     method: 'GET',
   });
 
-  return response.data;
+  // ✅ Security: Validate response structure
+  const validatedResponse = validatePaddleResponse(
+    CustomerSubscriptionsResponseSchema,
+    response,
+    'Get Customer Subscriptions Response'
+  );
+
+  return validatedResponse.data;
 }
 
 /**
@@ -286,8 +312,15 @@ export async function getUpdatePaymentMethodUrl(
     method: 'GET',
   });
 
+  // ✅ Security: Validate response structure
+  const validatedResponse = validatePaddleResponse(
+    UpdatePaymentMethodResponseSchema,
+    response,
+    'Update Payment Method Response'
+  );
+
   console.log(`✅ Update payment URL generated`);
-  return response.data.checkout.url;
+  return validatedResponse.data.checkout.url;
 }
 
 /**
@@ -298,8 +331,6 @@ export function verifyPaddleWebhook(
   rawBody: string,
   secret: string
 ): boolean {
-  const crypto = require('crypto');
-  
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(rawBody);
   const expectedSignature = hmac.digest('hex');
@@ -311,13 +342,19 @@ export function verifyPaddleWebhook(
  * Custom Data에서 userId 추출
  */
 export function extractUserIdFromCustomData(
-  customData: Record<string, any>
+  customData: Record<string, unknown>
 ): string | null {
-  return customData?.user_id || customData?.userId || null;
+  const userId = customData?.user_id;
+  const altUserId = customData?.userId;
+
+  if (typeof userId === 'string') return userId;
+  if (typeof altUserId === 'string') return altUserId;
+
+  return null;
 }
 
 // 기본 export
-export default {
+const paddleServer = {
   createTransaction: createPaddleTransaction,
   getSubscription: getPaddleSubscription,
   cancelSubscription: cancelPaddleSubscription,
@@ -328,3 +365,5 @@ export default {
   verifyWebhook: verifyPaddleWebhook,
   extractUserId: extractUserIdFromCustomData,
 };
+
+export default paddleServer;

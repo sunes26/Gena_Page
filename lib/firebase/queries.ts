@@ -1,14 +1,14 @@
 // lib/firebase/queries.ts
 import { getAdminFirestore } from './admin';
 import { HistoryDocument, DailyDocument } from './types';
-import { Timestamp } from 'firebase-admin/firestore';
+import { Timestamp, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
 /**
  * 쿼리 결과 타입
  */
 export interface QueryResult<T> {
   data: T[];
-  lastDoc: any;
+  lastDoc: QueryDocumentSnapshot | null;
   hasMore: boolean;
 }
 
@@ -40,7 +40,7 @@ export async function getUserHistory(
   userId: string,
   options: {
     limit?: number;
-    startAfter?: any;
+    startAfter?: QueryDocumentSnapshot;
   } = {}
 ): Promise<QueryResult<HistoryDocument & { id: string }>> {
   return handleQuery(async () => {
@@ -123,7 +123,7 @@ export async function searchHistory(
   searchTerm: string,
   options: {
     limit?: number;
-    startAfter?: any;
+    startAfter?: QueryDocumentSnapshot;
   } = {}
 ): Promise<QueryResult<HistoryDocument & { id: string }>> {
   return handleQuery(async () => {
@@ -166,6 +166,7 @@ export async function searchHistory(
     const data = filtered.slice(0, limit);
 
     return {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       data: data.map(({ doc, ...rest }) => rest),
       lastDoc: data.length > 0 ? data[data.length - 1].doc : null,
       hasMore,
@@ -184,7 +185,7 @@ export async function getHistoryByDomain(
   domain: string,
   options: {
     limit?: number;
-    startAfter?: any;
+    startAfter?: QueryDocumentSnapshot;
   } = {}
 ): Promise<QueryResult<HistoryDocument & { id: string }>> {
   return handleQuery(async () => {

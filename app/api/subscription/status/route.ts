@@ -58,6 +58,21 @@ export async function GET(request: NextRequest) {
     const subscriptionDoc = subscriptions.docs[0];
     const subscriptionData = subscriptionDoc.data();
 
+    // ✅ Security: Explicit ownership verification
+    if (subscriptionData.userId !== userId) {
+      console.error('Subscription ownership mismatch:', {
+        authenticated: userId,
+        subscription: subscriptionData.userId,
+      });
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: '이 구독에 대한 권한이 없습니다.',
+        },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json({
       subscription: {
         id: subscriptionDoc.id,

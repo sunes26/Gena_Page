@@ -1,8 +1,28 @@
 // components/providers/PaddleProvider.tsx
 'use client';
 
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useEffect, useState, useCallback, createContext, useContext } from 'react';
 import Script from 'next/script';
+
+/**
+ * Paddle SDK Type Definitions
+ */
+interface PaddleEvent {
+  name: string;
+  data?: unknown;
+}
+
+interface PaddleSetupOptions {
+  token: string;
+  eventCallback?: (event: PaddleEvent) => void;
+}
+
+interface PaddleSDK {
+  Environment?: {
+    set: (env: 'sandbox' | 'production') => void;
+  };
+  Setup: (options: PaddleSetupOptions) => void;
+}
 
 /**
  * Paddle Context
@@ -44,7 +64,7 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
   /**
    * Paddle 초기화 함수
    */
-  const initializePaddle = () => {
+  const initializePaddle = useCallback(() => {
     if (typeof window === 'undefined') {
       return;
     }
@@ -59,7 +79,7 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Paddle 객체 확인
-    const paddle = (window as any).Paddle;
+    const paddle = (window as Window & { Paddle?: PaddleSDK }).Paddle;
     if (!paddle) {
       console.warn('⚠️ Paddle 객체가 아직 로드되지 않았습니다.');
       return;
@@ -83,7 +103,7 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
       const options = {
         token: paddleToken,
         // 이벤트 콜백
-        eventCallback: (event: any) => {
+        eventCallback: (event: PaddleEvent) => {
           if (process.env.NODE_ENV === 'development') {
             console.log('🎫 Paddle Event:', event.name, event.data);
           }
@@ -122,11 +142,11 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [paddleEnv, paddleToken, isReady]);
 
   useEffect(() => {
     // Paddle 스크립트가 이미 로드되어 있으면 바로 초기화
-    if ((window as any).Paddle) {
+    if ((window as Window & { Paddle?: PaddleSDK }).Paddle) {
       initializePaddle();
       return;
     }
@@ -134,11 +154,11 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
     // Paddle 스크립트 로드 대기
     let checkCount = 0;
     const maxChecks = 100; // 10초 (100ms * 100)
-    
+
     const checkPaddle = setInterval(() => {
       checkCount++;
-      
-      if ((window as any).Paddle) {
+
+      if ((window as Window & { Paddle?: PaddleSDK }).Paddle) {
         clearInterval(checkPaddle);
         initializePaddle();
       } else if (checkCount >= maxChecks) {
@@ -153,7 +173,7 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
     return () => {
       clearInterval(checkPaddle);
     };
-  }, [paddleEnv, paddleToken]);
+  }, [paddleEnv, paddleToken, initializePaddle]);
 
   return (
     <PaddleContext.Provider value={{ isReady, isLoading, error }}>

@@ -131,9 +131,11 @@ export const cleanupFirebaseInstances = (): void => {
 };
 
 // 기본 export (하위 호환성)
-export default {
+const firebaseClient = {
   get app() { return initializeFirebase(); },
   get auth() { return getAuthInstance(); },
   get db() { return getFirestoreInstance(); },
   get storage() { return getStorageInstance(); },
 };
+
+export default firebaseClient;

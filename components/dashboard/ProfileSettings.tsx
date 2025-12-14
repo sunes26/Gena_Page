@@ -26,11 +26,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
   // 언어 변경 핸들러
   const handleLanguageChange = (newLocale: 'ko' | 'en') => {
     setLocale(newLocale);
-    showSuccess(
-      newLocale === 'ko' 
-        ? '언어가 한국어로 변경되었습니다.' 
-        : 'Language changed to English.'
-    );
+    showSuccess(t('settings.profile.languageChanged'));
   };
 
   // 프로필 정보 업데이트
@@ -38,12 +34,12 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
     e.preventDefault();
 
     if (!displayName.trim()) {
-      showError(locale === 'ko' ? '이름을 입력해주세요.' : 'Please enter your name.');
+      showError(t('settings.profile.nameRequired'));
       return;
     }
 
     if (displayName.trim() === user.displayName) {
-      showError(locale === 'ko' ? '변경된 내용이 없습니다.' : 'No changes to save.');
+      showError(t('settings.profile.noChanges'));
       return;
     }
 
@@ -53,7 +49,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
       await updateUserProfile(displayName.trim());
       showSuccess(t('settings.profile.success'));
       onUpdate();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Profile update error:', error);
       // ✅ 에러 메시지 번역 적용
       const errorMessage = translateAuthError(error, t);
@@ -74,9 +70,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{t('settings.profile.title')}</h3>
             <p className="text-sm text-gray-500">
-              {locale === 'ko' 
-                ? '사용자 이름을 관리하세요' 
-                : 'Manage your display name'}
+              {t('settings.profile.subtitle')}
             </p>
           </div>
         </div>
@@ -97,9 +91,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
               maxLength={50}
             />
             <p className="text-xs text-gray-500 mt-1">
-              {locale === 'ko' 
-                ? '다른 사용자에게 표시될 이름입니다 (최대 50자)' 
-                : 'This name will be shown to others (max 50 characters)'}
+              {t('settings.profile.nameHint')}
             </p>
           </div>
 
@@ -115,25 +107,23 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
             />
             <p className="text-xs text-gray-500 mt-1">
-              {locale === 'ko' 
-                ? '이메일은 변경할 수 없습니다' 
-                : 'Email address cannot be changed'}
+              {t('settings.profile.emailReadOnly')}
             </p>
           </div>
 
           {/* 이메일 인증 상태 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {locale === 'ko' ? '이메일 인증 상태' : 'Email Verification Status'}
+              {t('settings.profile.emailVerificationLabel')}
             </label>
             <div className="flex items-center space-x-2">
               {user.emailVerified ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  ✓ {locale === 'ko' ? '인증됨' : 'Verified'}
+                  ✓ {t('settings.profile.verified')}
                 </span>
               ) : (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  ⚠ {locale === 'ko' ? '미인증' : 'Not Verified'}
+                  ⚠ {t('settings.profile.notVerified')}
                 </span>
               )}
             </div>
@@ -170,12 +160,10 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {locale === 'ko' ? '언어 설정' : 'Language Settings'}
+              {t('settings.profile.languageTitle')}
             </h3>
             <p className="text-sm text-gray-500">
-              {locale === 'ko' 
-                ? '사용할 언어를 선택하세요' 
-                : 'Choose your preferred language'}
+              {t('settings.profile.languageSubtitle')}
             </p>
           </div>
         </div>
@@ -183,7 +171,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
         <div className="space-y-4 mt-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              {locale === 'ko' ? '언어' : 'Language'}
+              {t('settings.profile.languageLabel')}
             </label>
             <div className="grid grid-cols-2 gap-3">
               {/* 한국어 */}
@@ -230,9 +218,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <p className="text-sm text-gray-600">
-              {locale === 'ko' 
-                ? '💡 언어 변경은 즉시 적용되며, 모든 페이지에 반영됩니다.' 
-                : '💡 Language changes are applied immediately across all pages.'}
+              {t('settings.profile.languageNote')}
             </p>
           </div>
         </div>

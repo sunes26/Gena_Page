@@ -4,6 +4,7 @@
 import { Menu } from 'lucide-react';
 import { User } from 'firebase/auth';
 import Image from 'next/image';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MobileHeaderProps {
   onMenuClick: () => void;
@@ -11,6 +12,8 @@ interface MobileHeaderProps {
 }
 
 export default function MobileHeader({ onMenuClick, user }: MobileHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <header className="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
       {/* 햄버거 메뉴 */}
@@ -38,7 +41,7 @@ export default function MobileHeader({ onMenuClick, user }: MobileHeaderProps) {
         {user.photoURL ? (
           <Image
             src={user.photoURL}
-            alt={user.displayName || '사용자'}
+            alt={user.displayName || t('common.user')}
             width={32}
             height={32}
             className="w-8 h-8 rounded-full"

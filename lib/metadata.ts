@@ -1,28 +1,19 @@
 // lib/metadata.ts
 import { Metadata } from 'next';
+import {
+  Locale,
+  defaultMetadataByLocale,
+  getOGLocale,
+  getAlternateLocales
+} from './i18n-metadata';
 
 /**
  * 기본 메타데이터 설정
  */
 const defaultMetadata = {
   siteName: 'Gena',
-  title: 'Gena - AI 웹페이지 요약',
-  description: '웹 서핑 시간은 절반으로, 정보의 깊이는 두 배로. AI 기반 웹페이지 요약 서비스로 효율적인 정보 습득을 경험하세요.',
-  keywords: [
-    'AI 요약',
-    '웹페이지 요약',
-    '크롬 확장프로그램',
-    'ChatGPT',
-    '생산성',
-    '요약 서비스',
-    '한국어 요약',
-    '정보 요약',
-    '자동 요약',
-    '문서 요약',
-  ],
   ogImage: '/og-image.png',
   twitterHandle: '@gena',
-  locale: 'ko_KR',
   type: 'website' as const,
 };
 
@@ -37,29 +28,35 @@ interface MetadataOptions {
   author?: string;
   publishedTime?: string;
   modifiedTime?: string;
+  locale?: Locale; // 언어 코드 (ko, en)
 }
 
 /**
  * 페이지별 메타데이터 생성 헬퍼 함수
- * 
+ *
  * @example
  * // app/pricing/page.tsx
  * export const metadata = generateMetadata({
  *   title: '요금제',
  *   description: 'Gena의 요금제를 확인하세요',
  *   canonical: '/pricing',
+ *   locale: 'ko',
  * });
  */
 export function generateMetadata(options: MetadataOptions = {}): Metadata {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.app';
-  
+
+  // locale 기본값 설정
+  const locale = options.locale || 'ko';
+  const localeDefaults = defaultMetadataByLocale[locale];
+
   const {
-    title = defaultMetadata.title,
-    description = defaultMetadata.description,
-    keywords = defaultMetadata.keywords,
+    title = localeDefaults.title,
+    description = localeDefaults.description,
+    keywords = localeDefaults.keywords || [],
     canonical,
     ogImage = defaultMetadata.ogImage,
-    ogType = 'website', // 기본값을 'website'로 변경
+    ogType = 'website',
     noIndex = false,
     author,
     publishedTime,
@@ -67,35 +64,55 @@ export function generateMetadata(options: MetadataOptions = {}): Metadata {
   } = options;
 
   // 전체 제목 생성
-  const fullTitle = title === defaultMetadata.title 
-    ? title 
+  const fullTitle = title === localeDefaults.title
+    ? title
     : `${title} | ${defaultMetadata.siteName}`;
 
   // OG 이미지 URL 생성
-  const ogImageUrl = ogImage.startsWith('http') 
-    ? ogImage 
+  const ogImageUrl = ogImage.startsWith('http')
+    ? ogImage
     : `${baseUrl}${ogImage}`;
 
-  // Canonical URL 생성
-  const canonicalUrl = canonical 
-    ? `${baseUrl}${canonical}` 
-    : baseUrl;
+  // Canonical URL 생성 (언어 파라미터 포함)
+  const canonicalPath = canonical || '/';
+  const canonicalUrl = locale === 'ko'
+    ? `${baseUrl}${canonicalPath}`
+    : `${baseUrl}${canonicalPath}${canonicalPath.includes('?') ? '&' : '?'}lang=${locale}`;
+
+  // 대체 언어 URL 생성 (hreflang용)
+  const alternateLocales = getAlternateLocales(locale);
+  const languages: Record<string, string> = {
+    'x-default': `${baseUrl}${canonicalPath}`, // 기본은 한국어
+  };
+
+  // 현재 언어 추가
+  languages[locale] = canonicalUrl;
+
+  // 대체 언어들 추가
+  alternateLocales.forEach(altLocale => {
+    const altUrl = altLocale === 'ko'
+      ? `${baseUrl}${canonicalPath}`
+      : `${baseUrl}${canonicalPath}${canonicalPath.includes('?') ? '&' : '?'}lang=${altLocale}`;
+    languages[altLocale] = altUrl;
+  });
 
   const metadata: Metadata = {
     title: fullTitle,
     description,
     keywords,
     authors: author ? [{ name: author }] : [{ name: defaultMetadata.siteName }],
-    
+
     alternates: {
       canonical: canonicalUrl,
+      languages, // hreflang 태그
     },
 
     openGraph: {
       title: fullTitle,
       description,
       type: ogType,
-      locale: defaultMetadata.locale,
+      locale: getOGLocale(locale),
+      alternateLocale: alternateLocales.map(getOGLocale), // OG locale alternates
       url: canonicalUrl,
       siteName: defaultMetadata.siteName,
       images: [
@@ -118,7 +135,7 @@ export function generateMetadata(options: MetadataOptions = {}): Metadata {
       creator: defaultMetadata.twitterHandle,
     },
 
-    robots: noIndex 
+    robots: noIndex
       ? {
           index: false,
           follow: false,
@@ -156,6 +173,7 @@ export function generateArticleMetadata(options: {
   section?: string;
   ogImage?: string;
   canonical?: string;
+  locale?: Locale;
 }): Metadata {
   return generateMetadata({
     ...options,
@@ -166,7 +184,7 @@ export function generateArticleMetadata(options: {
 
 /**
  * 상품(구독) 페이지용 메타데이터 생성
- * 
+ *
  * 참고: Next.js OpenGraph는 'product' 타입을 지원하지 않으므로
  * 'website'를 사용하고, 상품 정보는 JSON-LD로 제공합니다.
  */
@@ -178,6 +196,7 @@ export function generateProductMetadata(options: {
   availability?: string;
   ogImage?: string;
   canonical?: string;
+  locale?: Locale;
 }): Metadata {
   // OpenGraph는 'website' 타입 사용 (product는 지원 안 함)
   return generateMetadata({
@@ -190,34 +209,37 @@ export function generateProductMetadata(options: {
 /**
  * 대시보드/비공개 페이지용 메타데이터
  */
-export function generatePrivateMetadata(title: string): Metadata {
+export function generatePrivateMetadata(title: string, locale?: Locale): Metadata {
+  const description = locale === 'en' ? 'Gena Dashboard' : 'Gena 대시보드';
   return generateMetadata({
     title,
-    description: 'Gena 대시보드',
+    description,
     noIndex: true, // 검색 엔진에 노출하지 않음
+    locale,
   });
 }
 
 /**
  * JSON-LD 스키마 생성 (구조화된 데이터)
  */
-export function generateJsonLd(data: Record<string, any>): string {
+export function generateJsonLd(data: Record<string, unknown>): string {
   return JSON.stringify(data, null, 2);
 }
 
 /**
  * Organization Schema (회사 정보)
  */
-export function getOrganizationSchema() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.day';
-  
+export function getOrganizationSchema(locale: Locale = 'ko') {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.app';
+  const description = defaultMetadataByLocale[locale].description;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'gena',
     url: baseUrl,
     logo: `${baseUrl}/logo.png`,
-    description: defaultMetadata.description,
+    description,
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'Customer Service',
@@ -236,9 +258,10 @@ export function getOrganizationSchema() {
 /**
  * WebApplication Schema (웹 애플리케이션)
  */
-export function getWebApplicationSchema() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.day';
-  
+export function getWebApplicationSchema(locale: Locale = 'ko') {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.app';
+  const description = defaultMetadataByLocale[locale].description;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
@@ -246,19 +269,20 @@ export function getWebApplicationSchema() {
     url: baseUrl,
     applicationCategory: 'ProductivityApplication',
     operatingSystem: 'Any',
-    description: defaultMetadata.description,
+    description,
     offers: {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'KRW',
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '1234',
-      bestRating: '5',
-      worstRating: '1',
-    },
+    // aggregateRating: 실제 평점 데이터가 수집되면 추가
+    // {
+    //   '@type': 'AggregateRating',
+    //   ratingValue: '4.8',
+    //   ratingCount: '1234',
+    //   bestRating: '5',
+    //   worstRating: '1',
+    // },
   };
 }
 
@@ -266,7 +290,7 @@ export function getWebApplicationSchema() {
  * Product Schema (Pro 구독)
  */
 export function getProductSchema() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.day';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.app';
   
   return {
     '@context': 'https://schema.org',
@@ -286,13 +310,14 @@ export function getProductSchema() {
       url: `${baseUrl}/pricing`,
       priceValidUntil: '2025-12-31',
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '856',
-      bestRating: '5',
-      worstRating: '1',
-    },
+    // aggregateRating: 실제 리뷰 데이터가 수집되면 추가
+    // {
+    //   '@type': 'AggregateRating',
+    //   ratingValue: '4.9',
+    //   reviewCount: '856',
+    //   bestRating: '5',
+    //   worstRating: '1',
+    // },
   };
 }
 
@@ -300,7 +325,7 @@ export function getProductSchema() {
  * BreadcrumbList Schema (빵 부스러기)
  */
 export function getBreadcrumbSchema(items: Array<{ name: string; url: string }>) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://Gena.day';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gena.app';
   
   return {
     '@context': 'https://schema.org',

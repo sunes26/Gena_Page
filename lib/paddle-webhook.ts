@@ -16,13 +16,14 @@ export type PaddleEventType =
   | 'transaction.completed'
   | 'transaction.updated'
   | 'transaction.payment_failed'
+  | 'transaction.refunded'
   | 'customer.created'
   | 'customer.updated';
 
 /**
  * Paddle 웹훅 이벤트 구조
  */
-export interface PaddleWebhookEvent<T = any> {
+export interface PaddleWebhookEvent<T = unknown> {
   event_id: string;
   event_type: PaddleEventType;
   occurred_at: string;
@@ -37,7 +38,7 @@ export interface PaddleSubscriptionData {
   id: string;
   status: 'active' | 'canceled' | 'past_due' | 'paused' | 'trialing';
   customer_id: string;
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   items: Array<{
     price_id: string;
     quantity: number;
@@ -76,7 +77,7 @@ export interface PaddleTransactionData {
   billed_at: string;
   created_at: string;
   updated_at: string;
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   details: {
     totals: {
       subtotal: string;
@@ -195,13 +196,34 @@ export function verifyWebhookSignature(
       return false;
     }
 
-    // 타임스탬프 검증 (5분 이내)
+    // ✅ Security: Enhanced timestamp validation
     const now = Math.floor(Date.now() / 1000);
     const timestampNum = parseInt(timestamp, 10);
-    const timeDiff = Math.abs(now - timestampNum);
 
+    // Validate timestamp is a valid number
+    if (isNaN(timestampNum) || timestampNum <= 0) {
+      console.error('Invalid timestamp format:', timestamp);
+      return false;
+    }
+
+    // Validate timestamp is not too far in the past (max 1 hour old)
+    const MAX_AGE_SECONDS = 60 * 60; // 1 hour
+    if (timestampNum < now - MAX_AGE_SECONDS) {
+      console.error(`Timestamp too old: ${now - timestampNum} seconds (max: ${MAX_AGE_SECONDS})`);
+      return false;
+    }
+
+    // Validate timestamp is not in the future (allow 5 min clock skew tolerance)
+    const MAX_FUTURE_TOLERANCE = 5 * 60; // 5 minutes
+    if (timestampNum > now + MAX_FUTURE_TOLERANCE) {
+      console.error(`Timestamp too far in future: ${timestampNum - now} seconds ahead`);
+      return false;
+    }
+
+    // Final check: timestamp within acceptable window (5 minutes for normal operation)
+    const timeDiff = Math.abs(now - timestampNum);
     if (timeDiff > 300) {
-      console.error(`Timestamp too old: ${timeDiff} seconds`);
+      console.error(`Timestamp outside acceptable window: ${timeDiff} seconds`);
       return false;
     }
 
@@ -230,8 +252,8 @@ export function verifyWebhookSignature(
  * console.log(event.data.id); // "sub_123"
  * ```
  */
-export function parseWebhookEvent<T = any>(
-  body: string | any
+export function parseWebhookEvent<T = unknown>(
+  body: string | unknown
 ): PaddleWebhookEvent<T> {
   try {
     // 이미 객체면 그대로 반환
@@ -240,7 +262,7 @@ export function parseWebhookEvent<T = any>(
     }
 
     // 문자열이면 JSON 파싱
-    const parsed = JSON.parse(body);
+    const parsed = JSON.parse(body as string);
 
     // 필수 필드 검증
     if (!parsed.event_id || !parsed.event_type || !parsed.data) {
@@ -306,7 +328,7 @@ export async function isDuplicateEvent(eventId: string): Promise<boolean> {
 export async function markEventAsProcessed(
   eventId: string,
   eventType: PaddleEventType,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   try {
     const db = getAdminFirestore();
@@ -344,9 +366,16 @@ export async function markEventAsProcessed(
  * }
  * ```
  */
-export function extractUserId(customData?: Record<string, any>): string | null {
+export function extractUserId(customData?: Record<string, unknown>): string | null {
   if (!customData) return null;
-  return customData.user_id || customData.userId || null;
+
+  const userId = customData.user_id;
+  const altUserId = customData.userId;
+
+  if (typeof userId === 'string') return userId;
+  if (typeof altUserId === 'string') return altUserId;
+
+  return null;
 }
 
 /**
@@ -481,9 +510,207 @@ export async function getWebhookStats(days: number = 7): Promise<{
 }
 
 /**
+ * ✅ 웹훅 실패 로깅
+ *
+ * 처리에 실패한 웹훅 이벤트를 영구적으로 기록합니다.
+ * 이를 통해 실패한 이벤트를 추적하고 수동으로 재처리할 수 있습니다.
+ *
+ * @param event - 웹훅 이벤트
+ * @param error - 발생한 에러
+ * @param context - 추가 컨텍스트 정보
+ */
+export async function logWebhookFailure(
+  event: PaddleWebhookEvent,
+  error: Error,
+  context?: Record<string, unknown>
+): Promise<void> {
+  try {
+    const db = getAdminFirestore();
+
+    await db.collection('webhook_failures').add({
+      eventId: event.event_id,
+      eventType: event.event_type,
+      occurredAt: Timestamp.fromDate(new Date(event.occurred_at)),
+      failedAt: Timestamp.now(),
+      error: {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      },
+      eventData: event.data,
+      context: context || {},
+      retryCount: 0,
+      resolved: false,
+      // 30일 후 자동 삭제
+      expiresAt: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+    });
+
+    console.error(`❌ Webhook failure logged: ${event.event_id} (${event.event_type})`);
+  } catch (logError) {
+    console.error('Failed to log webhook failure:', logError);
+    // 로깅 실패는 무시 (원본 에러를 throw)
+  }
+}
+
+/**
+ * ✅ 실패한 웹훅 조회
+ *
+ * @param options - 조회 옵션
+ * @returns 실패한 웹훅 목록
+ */
+export async function getWebhookFailures(options: {
+  limit?: number;
+  resolved?: boolean;
+  eventType?: string;
+} = {}): Promise<Array<{
+  id: string;
+  eventId: string;
+  eventType: string;
+  failedAt: Date;
+  error: { message: string; stack?: string };
+  retryCount: number;
+  resolved: boolean;
+}>> {
+  try {
+    const db = getAdminFirestore();
+    const { limit = 50, resolved, eventType } = options;
+
+    let query = db.collection('webhook_failures').orderBy('failedAt', 'desc');
+
+    if (resolved !== undefined) {
+      query = query.where('resolved', '==', resolved);
+    }
+
+    if (eventType) {
+      query = query.where('eventType', '==', eventType);
+    }
+
+    const snapshot = await query.limit(limit).get();
+
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        eventId: data.eventId,
+        eventType: data.eventType,
+        failedAt: data.failedAt.toDate(),
+        error: data.error,
+        retryCount: data.retryCount || 0,
+        resolved: data.resolved || false,
+      };
+    });
+  } catch (error) {
+    console.error('Failed to get webhook failures:', error);
+    throw error;
+  }
+}
+
+/**
+ * ✅ 실패한 웹훅 재시도 표시
+ */
+export async function markWebhookFailureAsRetried(failureId: string): Promise<void> {
+  try {
+    const db = getAdminFirestore();
+    const failureRef = db.collection('webhook_failures').doc(failureId);
+
+    await failureRef.update({
+      retryCount: (await failureRef.get()).data()?.retryCount + 1 || 1,
+      lastRetryAt: Timestamp.now(),
+    });
+
+    console.log(`✅ Webhook failure marked as retried: ${failureId}`);
+  } catch (error) {
+    console.error('Failed to mark webhook failure as retried:', error);
+    throw error;
+  }
+}
+
+/**
+ * ✅ 실패한 웹훅 해결됨으로 표시
+ */
+export async function markWebhookFailureAsResolved(
+  failureId: string,
+  resolution?: string
+): Promise<void> {
+  try {
+    const db = getAdminFirestore();
+
+    await db.collection('webhook_failures').doc(failureId).update({
+      resolved: true,
+      resolvedAt: Timestamp.now(),
+      ...(resolution && { resolution }),
+    });
+
+    console.log(`✅ Webhook failure marked as resolved: ${failureId}`);
+  } catch (error) {
+    console.error('Failed to mark webhook failure as resolved:', error);
+    throw error;
+  }
+}
+
+/**
+ * ✅ 웹훅 실패 통계
+ *
+ * @param days - 조회 기간 (일)
+ * @returns 실패 통계
+ */
+export async function getWebhookFailureStats(days: number = 7): Promise<{
+  total: number;
+  byEventType: Record<string, number>;
+  unresolved: number;
+  recentFailures: Array<{ eventType: string; count: number }>;
+}> {
+  try {
+    const db = getAdminFirestore();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const failuresSnapshot = await db
+      .collection('webhook_failures')
+      .where('failedAt', '>=', Timestamp.fromDate(startDate))
+      .get();
+
+    const stats = {
+      total: failuresSnapshot.size,
+      byEventType: {} as Record<string, number>,
+      unresolved: 0,
+    };
+
+    failuresSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const eventType = data.eventType as string;
+
+      // 이벤트 타입별 카운트
+      stats.byEventType[eventType] = (stats.byEventType[eventType] || 0) + 1;
+
+      // 미해결 카운트
+      if (!data.resolved) {
+        stats.unresolved++;
+      }
+    });
+
+    // 최근 실패 순위
+    const recentFailures = Object.entries(stats.byEventType)
+      .map(([eventType, count]) => ({ eventType, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      total: stats.total,
+      byEventType: stats.byEventType,
+      unresolved: stats.unresolved,
+      recentFailures,
+    };
+  } catch (error) {
+    console.error('Failed to get webhook failure stats:', error);
+    throw error;
+  }
+}
+
+/**
  * 기본 export
  */
-export default {
+const paddleWebhook = {
   verifyWebhookSignature,
   parseWebhookEvent,
   isDuplicateEvent,
@@ -492,4 +719,11 @@ export default {
   logWebhookEvent,
   cleanupOldWebhookEvents,
   getWebhookStats,
+  logWebhookFailure,
+  getWebhookFailures,
+  markWebhookFailureAsRetried,
+  markWebhookFailureAsResolved,
+  getWebhookFailureStats,
 };
+
+export default paddleWebhook;

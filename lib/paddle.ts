@@ -28,7 +28,9 @@ export function getPaddleInstance(): Paddle | undefined {
     return undefined;
   }
 
-  const paddle = (window as any).Paddle as Paddle | undefined;
+  const windowWithPaddle = window as Window & { Paddle?: Paddle };
+  const paddle = windowWithPaddle.Paddle;
+
   if (!paddle) {
     console.warn('⚠️ getPaddleInstance: Paddle이 초기화되지 않음');
     return undefined;
@@ -41,7 +43,9 @@ export function getPaddleInstance(): Paddle | undefined {
  * ✅ Paddle 초기화 상태 확인
  */
 export function isPaddleReady(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).Paddle;
+  if (typeof window === 'undefined') return false;
+  const windowWithPaddle = window as Window & { Paddle?: Paddle };
+  return !!windowWithPaddle.Paddle;
 }
 
 /**
@@ -77,7 +81,7 @@ export interface OpenCheckoutOptions {
   userId: string;
   userEmail?: string;
   successUrl?: string;
-  customData?: Record<string, any>;
+  customData?: Record<string, unknown>;
 }
 
 /**
@@ -197,9 +201,9 @@ export async function startProSubscription(
  */
 export async function cancelSubscription(subscriptionId: string): Promise<boolean> {
   try {
-    // Firebase ID 토큰 가져오기
-    const { getIdToken } = await import('./auth');
-    const token = await getIdToken();
+    // ✅ Security: Force refresh token before critical operation
+    const { refreshIdToken } = await import('./auth');
+    const token = await refreshIdToken();
 
     if (!token) {
       throw new Error('사용자가 인증되지 않았습니다.');
@@ -239,8 +243,9 @@ export async function cancelSubscription(subscriptionId: string): Promise<boolea
  */
 export async function updatePaymentMethod(subscriptionId: string): Promise<void> {
   try {
-    const { getIdToken } = await import('./auth');
-    const token = await getIdToken();
+    // ✅ Security: Force refresh token before critical operation
+    const { refreshIdToken } = await import('./auth');
+    const token = await refreshIdToken();
 
     if (!token) {
       throw new Error('사용자가 인증되지 않았습니다.');
@@ -275,8 +280,9 @@ export async function updatePaymentMethod(subscriptionId: string): Promise<void>
  */
 export async function resumeSubscription(subscriptionId: string): Promise<boolean> {
   try {
-    const { getIdToken } = await import('./auth');
-    const token = await getIdToken();
+    // ✅ Security: Force refresh token before critical operation
+    const { refreshIdToken } = await import('./auth');
+    const token = await refreshIdToken();
 
     if (!token) {
       throw new Error('사용자가 인증되지 않았습니다.');
@@ -342,7 +348,7 @@ export function logPaddleDebugInfo(): void {
 }
 
 // 기본 export
-export default {
+const paddle = {
   getInstance: getPaddleInstance,
   isReady: isPaddleReady,
   validateConfig: validatePaddleConfig,
@@ -355,3 +361,5 @@ export default {
   environment: PADDLE_ENVIRONMENT,
   logDebugInfo: logPaddleDebugInfo,
 };
+
+export default paddle;

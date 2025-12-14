@@ -12,6 +12,7 @@ import {
   LogOut,
   X,
   Crown,
+  Receipt,
 } from 'lucide-react';
 import { logout } from '@/lib/auth';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -51,6 +52,11 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
       name: t('dashboard.sidebar.subscription'),
       href: '/subscription',
       icon: CreditCard,
+    },
+    {
+      name: t('dashboard.sidebar.billing'),
+      href: '/billing',
+      icon: Receipt,
     },
     {
       name: t('dashboard.sidebar.settings'),

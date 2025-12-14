@@ -53,20 +53,32 @@ function ChartSkeleton() {
   );
 }
 
+interface ChartDataItem {
+  date: string;
+  label: string;
+  count: number;
+}
+
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+}
+
 // ✅ 차트 렌더링 컴포넌트 (Suspense 내부)
-function ChartContent({ 
-  weeklyData, 
-  monthlyData, 
+function ChartContent({
+  weeklyData,
+  monthlyData,
   activeChart,
   locale
-}: { 
-  weeklyData: any[]; 
-  monthlyData: any[]; 
+}: {
+  weeklyData: ChartDataItem[];
+  monthlyData: ChartDataItem[];
   activeChart: ChartType;
   locale: string;
 }) {
   // 커스텀 툴팁
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">

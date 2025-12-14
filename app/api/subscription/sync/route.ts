@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminFirestore } from '@/lib/firebase/admin';
 import { getPaddleSubscription } from '@/lib/paddle-server';
 import { Timestamp } from 'firebase-admin/firestore';
+import { applyRateLimit, getIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
+import { tryClaimIdempotencyKey, getIdempotencyResult, storeIdempotencyResult } from '@/lib/idempotency';
 
 /**
  * 구독 정보 수동 동기화 API
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
     let decodedToken;
     try {
       decodedToken = await auth.verifyIdToken(idToken);
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { success: false, error: '유효하지 않은 인증 토큰입니다.' },
         { status: 401 }
@@ -39,6 +41,36 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = decodedToken.uid;
+
+    // Rate Limiting (사용자별)
+    const identifier = getIdentifier(request, userId);
+    const rateLimitResponse = await applyRateLimit(identifier, RATE_LIMITS.GENERAL);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
+    // ✅ Security: Idempotency check (prevent duplicate sync requests within 2 minutes)
+    const idempotencyKey = `sync_${userId}_${Math.floor(Date.now() / (2 * 60 * 1000))}`;
+    const canProceed = await tryClaimIdempotencyKey(idempotencyKey, userId, 'subscription.sync', 2);
+
+    if (!canProceed) {
+      // Check if we have a cached result
+      const cachedResult = await getIdempotencyResult(idempotencyKey);
+      if (cachedResult) {
+        console.log(`✅ Returning cached result for duplicate sync request`);
+        return NextResponse.json(cachedResult);
+      }
+
+      // No cached result, but this is a duplicate - return appropriate message
+      return NextResponse.json(
+        {
+          success: true,
+          message: '동기화가 이미 진행 중입니다. 잠시 후 다시 시도해주세요.',
+          alreadyInProgress: true,
+        },
+        { status: 429 }
+      );
+    }
 
     // 2. Firestore에서 사용자의 구독 찾기
     const db = getAdminFirestore();
@@ -62,6 +94,22 @@ export async function POST(request: NextRequest) {
 
     const subscriptionDoc = subscriptionsSnapshot.docs[0];
     const subscriptionData = subscriptionDoc.data();
+
+    // ✅ Security: Explicit ownership verification
+    if (subscriptionData.userId !== userId) {
+      console.error('Subscription ownership mismatch:', {
+        authenticated: userId,
+        subscription: subscriptionData.userId,
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: '이 구독에 대한 권한이 없습니다.',
+        },
+        { status: 403 }
+      );
+    }
+
     const paddleSubscriptionId = subscriptionData.paddleSubscriptionId;
 
     if (!paddleSubscriptionId) {
@@ -90,7 +138,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Firestore 업데이트
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status: paddleSubscription.status,
       currentPeriodEnd: Timestamp.fromDate(
         new Date(paddleSubscription.current_billing_period.ends_at)
@@ -105,7 +153,9 @@ export async function POST(request: NextRequest) {
     // 가격 정보 업데이트
     if (paddleSubscription.items && paddleSubscription.items.length > 0) {
       const firstItem = paddleSubscription.items[0];
-      updateData.priceId = firstItem.price_id;
+      updateData.priceId = firstItem.price?.id || '';
+      updateData.price = firstItem.price?.unit_price?.amount || 0;
+      updateData.currency = firstItem.price?.unit_price?.currency_code || 'KRW';
     }
 
     await subscriptionDoc.ref.update(updateData);
@@ -127,18 +177,29 @@ export async function POST(request: NextRequest) {
       .collection('users')
       .doc(userId)
       .collection('daily');
-    
+
+    // ✅ 최적화: limit 추가 (N+1 쿼리 방지)
     const dailySnapshot = await dailyRef
       .where('date', '>=', today)
+      .limit(90)
       .get();
 
     if (!dailySnapshot.empty) {
-      const batch = db.batch();
-      dailySnapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { isPremium });
-      });
-      await batch.commit();
-      console.log(`✅ Updated ${dailySnapshot.size} daily docs`);
+      // ✅ 배치 크기 제한 (Firestore 500개 제한)
+      const batchSize = 500;
+      const docs = dailySnapshot.docs;
+
+      for (let i = 0; i < docs.length; i += batchSize) {
+        const batch = db.batch();
+        const chunk = docs.slice(i, i + batchSize);
+
+        chunk.forEach(doc => {
+          batch.update(doc.ref, { isPremium, updatedAt: Timestamp.now() });
+        });
+
+        await batch.commit();
+        console.log(`✅ Updated ${chunk.length} daily docs (sync)`);
+      }
     }
 
     // 7. 응답
@@ -152,7 +213,7 @@ export async function POST(request: NextRequest) {
     console.log(`   Current Period End: ${paddleSubscription.current_billing_period.ends_at}`);
     console.log(`   Days until renewal: ${daysUntilRenewal}`);
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       message: '구독 정보가 동기화되었습니다.',
       subscription: {
@@ -163,7 +224,12 @@ export async function POST(request: NextRequest) {
         daysUntilRenewal,
         isPremium,
       },
-    });
+    };
+
+    // ✅ Store result for idempotency
+    await storeIdempotencyResult(idempotencyKey, responseData);
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('Subscription sync error:', error);

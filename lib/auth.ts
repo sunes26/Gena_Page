@@ -107,8 +107,11 @@ export function getCurrentUser(): User | null {
 
 /**
  * ID 토큰 가져오기 (API 요청용)
+ *
+ * @param forceRefresh - true이면 캐시를 무시하고 새 토큰을 가져옴 (기본값: false)
+ * ✅ Security: Critical operations should use forceRefresh=true
  */
-export async function getIdToken(): Promise<string | null> {
+export async function getIdToken(forceRefresh: boolean = false): Promise<string | null> {
   const auth = getAuthInstance();
   const user = auth.currentUser;
 
@@ -116,7 +119,17 @@ export async function getIdToken(): Promise<string | null> {
     return null;
   }
 
-  return await user.getIdToken();
+  // ✅ Security: Force refresh for critical operations
+  // This ensures the token is valid and not expired
+  return await user.getIdToken(forceRefresh);
+}
+
+/**
+ * ID 토큰 강제 갱신 (중요한 작업 전 호출)
+ * 구독 취소, 결제 등 중요한 작업 전에 토큰을 갱신하여 만료된 토큰 사용을 방지합니다.
+ */
+export async function refreshIdToken(): Promise<string | null> {
+  return await getIdToken(true);
 }
 
 /**
@@ -200,11 +213,11 @@ export async function reauthenticateUser(
   }
 
   const credential = EmailAuthProvider.credential(user.email, currentPassword);
-  
+
   try {
     await reauthenticateWithCredential(user, credential);
-  } catch (error: any) {
-    if (error.code === 'auth/wrong-password') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'auth/wrong-password') {
       throw new Error('auth/wrong-password');
     }
     throw error;
@@ -232,22 +245,24 @@ export async function updateUserEmail(
   try {
     // 1. 재인증
     await reauthenticateUser(currentPassword);
-    
+
     // 2. 이메일 업데이트
     await updateEmail(user, newEmail);
-    
+
     // 3. 새 이메일로 인증 이메일 발송
     await sendEmailVerification(user);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 에러 코드만 throw (번역은 클라이언트에서)
-    if (error.code === 'auth/email-already-in-use') {
-      throw new Error('auth/email-already-in-use');
-    }
-    if (error.code === 'auth/invalid-email') {
-      throw new Error('auth/invalid-email');
-    }
-    if (error.code === 'auth/requires-recent-login') {
-      throw new Error('auth/requires-recent-login');
+    if (error && typeof error === 'object' && 'code' in error) {
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('auth/email-already-in-use');
+      }
+      if (error.code === 'auth/invalid-email') {
+        throw new Error('auth/invalid-email');
+      }
+      if (error.code === 'auth/requires-recent-login') {
+        throw new Error('auth/requires-recent-login');
+      }
     }
     throw error;
   }
@@ -274,16 +289,18 @@ export async function changePassword(
   try {
     // 1. 재인증
     await reauthenticateUser(currentPassword);
-    
+
     // 2. 비밀번호 업데이트
     await updatePassword(user, newPassword);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 에러 코드만 throw (번역은 클라이언트에서)
-    if (error.code === 'auth/weak-password') {
-      throw new Error('auth/weak-password');
-    }
-    if (error.code === 'auth/requires-recent-login') {
-      throw new Error('auth/requires-recent-login');
+    if (error && typeof error === 'object' && 'code' in error) {
+      if (error.code === 'auth/weak-password') {
+        throw new Error('auth/weak-password');
+      }
+      if (error.code === 'auth/requires-recent-login') {
+        throw new Error('auth/requires-recent-login');
+      }
     }
     throw error;
   }
@@ -326,6 +343,9 @@ export async function uploadAndUpdateProfilePhoto(
  * Firebase Auth 에러 코드를 반환
  * (실제 번역은 클라이언트 컴포넌트에서 useTranslation 훅으로 처리)
  */
-export function getFirebaseErrorCode(error: any): string {
-  return error?.code || 'auth/unknown-error';
+export function getFirebaseErrorCode(error: unknown): string {
+  if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
+    return error.code;
+  }
+  return 'auth/unknown-error';
 }

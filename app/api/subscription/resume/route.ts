@@ -1,13 +1,25 @@
 // app/api/subscription/resume/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { verifyIdToken } from '@/lib/firebase/admin-utils';
 import { getAdminFirestore } from '@/lib/firebase/admin';
-import { 
-  resumePaddleSubscription, 
+import {
+  resumePaddleSubscription,
   cancelScheduledChange,
-  getPaddleSubscription 
+  getPaddleSubscription
 } from '@/lib/paddle-server';
 import { Timestamp } from 'firebase-admin/firestore';
+import { applyRateLimit, getIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
+import { tryClaimIdempotencyKey, getIdempotencyResult, storeIdempotencyResult } from '@/lib/idempotency';
+import {
+  successResponse,
+  unauthorizedResponse,
+  forbiddenResponse,
+  notFoundResponse,
+  internalServerErrorResponse,
+  businessLogicErrorResponse,
+  rateLimitErrorResponse,
+} from '@/lib/api-response';
+import { logSubscriptionResumed } from '@/lib/audit';
 
 /**
  * 취소 예정인 구독 재개
@@ -27,10 +39,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Missing or invalid Authorization header' },
-        { status: 401 }
-      );
+      return unauthorizedResponse('인증 헤더가 누락되었거나 올바르지 않습니다.');
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -40,18 +49,38 @@ export async function POST(request: NextRequest) {
       decodedToken = await verifyIdToken(token);
     } catch (error) {
       console.error('Token verification error:', error);
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
+      return unauthorizedResponse('토큰이 유효하지 않거나 만료되었습니다.');
     }
 
     const userId = decodedToken.uid;
 
+    // Rate Limiting (사용자별)
+    const identifier = getIdentifier(request, userId);
+    const rateLimitResponse = await applyRateLimit(identifier, RATE_LIMITS.SUBSCRIPTION_MUTATE);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
+    // ✅ Security: Idempotency check (prevent duplicate resume requests within 5 minutes)
+    const idempotencyKey = `resume_${userId}_${Math.floor(Date.now() / (5 * 60 * 1000))}`;
+    const canProceed = await tryClaimIdempotencyKey(idempotencyKey, userId, 'subscription.resume', 5);
+
+    if (!canProceed) {
+      // Check if we have a cached result
+      const cachedResult = await getIdempotencyResult(idempotencyKey);
+      if (cachedResult) {
+        console.log(`✅ Returning cached result for duplicate resume request`);
+        return Response.json(cachedResult);
+      }
+
+      // No cached result, but this is a duplicate - return appropriate message
+      return rateLimitErrorResponse('구독 재개 요청이 이미 처리되었습니다. 잠시 후 다시 시도해주세요.');
+    }
+
     // 2. Firestore에서 구독 정보 조회
     const db = getAdminFirestore();
     const subscriptionRef = db.collection('subscription');
-    
+
     const subscriptionsSnapshot = await subscriptionRef
       .where('userId', '==', userId)
       .where('status', 'in', ['active', 'trialing', 'paused'])
@@ -59,28 +88,26 @@ export async function POST(request: NextRequest) {
       .get();
 
     if (subscriptionsSnapshot.empty) {
-      return NextResponse.json(
-        {
-          error: 'No active subscription',
-          message: '활성화된 구독이 없습니다.',
-        },
-        { status: 404 }
-      );
+      return notFoundResponse('활성화된 구독이 없습니다.');
     }
 
     const subscriptionDoc = subscriptionsSnapshot.docs[0];
     const subscriptionData = subscriptionDoc.data();
+
+    // ✅ Security: Explicit ownership verification
+    if (subscriptionData.userId !== userId) {
+      console.error('Subscription ownership mismatch:', {
+        authenticated: userId,
+        subscription: subscriptionData.userId,
+      });
+      return forbiddenResponse('이 구독에 대한 권한이 없습니다.');
+    }
+
     const paddleSubscriptionId = subscriptionData.paddleSubscriptionId;
 
     if (!paddleSubscriptionId) {
       console.error('Missing paddleSubscriptionId:', subscriptionData);
-      return NextResponse.json(
-        {
-          error: 'Invalid subscription data',
-          message: '구독 정보가 올바르지 않습니다.',
-        },
-        { status: 500 }
-      );
+      return internalServerErrorResponse('구독 정보가 올바르지 않습니다.');
     }
 
     console.log(`🔍 Subscription status check:`, {
@@ -91,15 +118,16 @@ export async function POST(request: NextRequest) {
 
     // 3. 이미 활성 상태이고 취소 예정이 아닌 경우
     if (!subscriptionData.cancelAtPeriodEnd && subscriptionData.status !== 'paused') {
-      return NextResponse.json({
-        success: true,
-        alreadyActive: true,
-        message: '구독이 이미 활성화되어 있습니다.',
-        subscription: {
-          status: subscriptionData.status,
-          cancelAtPeriodEnd: false,
-        },
-      });
+      return businessLogicErrorResponse(
+        '구독이 이미 활성화되어 있습니다.',
+        {
+          alreadyActive: true,
+          subscription: {
+            status: subscriptionData.status,
+            cancelAtPeriodEnd: false,
+          },
+        }
+      );
     }
 
     let updatedSubscription;
@@ -120,13 +148,9 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       console.error('Paddle API error:', error);
-      return NextResponse.json(
-        {
-          error: 'Failed to resume subscription',
-          message: 'Paddle 구독 재개에 실패했습니다.',
-          details: error instanceof Error ? error.message : 'Unknown error',
-        },
-        { status: 500 }
+      return internalServerErrorResponse(
+        'Paddle 구독 재개에 실패했습니다.',
+        error instanceof Error ? error.message : 'Unknown error'
       );
     }
 
@@ -140,10 +164,32 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Subscription resumed successfully: ${paddleSubscriptionId}`);
 
+    // ✅ Audit logging
+    const resumeType = subscriptionData.status === 'paused'
+      ? 'paused_subscription_resumed'
+      : 'cancellation_reverted';
+
+    await logSubscriptionResumed(
+      userId,
+      paddleSubscriptionId,
+      { type: 'user', id: userId, ip: request.headers.get('x-forwarded-for') || undefined },
+      {
+        resumeType,
+        previousStatus: subscriptionData.status,
+        wasCancelAtPeriodEnd: subscriptionData.cancelAtPeriodEnd,
+        newStatus: updatedSubscription.status,
+        nextBilledAt: updatedSubscription.next_billed_at,
+      }
+    ).catch((err) => {
+      console.error('Failed to log subscription resumed audit:', err);
+    });
+
     // 6. 성공 응답
-    return NextResponse.json({
-      success: true,
-      message: '구독이 재개되었습니다. 다음 결제일에 정상적으로 갱신됩니다.',
+    const message = subscriptionData.cancelAtPeriodEnd
+      ? '구독 취소가 철회되었습니다. 다음 결제일에 정상적으로 갱신됩니다.'
+      : '구독이 재개되었습니다. 다음 결제일에 정상적으로 갱신됩니다.';
+
+    const responseData = {
       subscription: {
         id: updatedSubscription.id,
         status: updatedSubscription.status,
@@ -151,17 +197,18 @@ export async function POST(request: NextRequest) {
         currentPeriodEnd: updatedSubscription.current_billing_period.ends_at,
         nextBilledAt: updatedSubscription.next_billed_at,
       },
-    });
+    };
+
+    // ✅ Store result for idempotency
+    await storeIdempotencyResult(idempotencyKey, { success: true, data: responseData, message });
+
+    return successResponse(responseData, message);
 
   } catch (error) {
     console.error('Subscription resume error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: '구독 재개 중 오류가 발생했습니다.',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
+    return internalServerErrorResponse(
+      '구독 재개 중 오류가 발생했습니다.',
+      error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }

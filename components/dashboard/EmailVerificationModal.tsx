@@ -7,7 +7,7 @@ import { sendEmailVerification } from 'firebase/auth';
 import { getAuthInstance } from '@/lib/firebase/client';
 import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
-import { Mail, CheckCircle, X } from 'lucide-react';
+import { Mail, CheckCircle } from 'lucide-react';
 
 interface EmailVerificationModalProps {
   isOpen: boolean;
@@ -63,10 +63,10 @@ export default function EmailVerificationModal({
       toast.success(t('emailVerification.emailSent'));
       
       console.log('✅ Verification email sent to:', userEmail);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Failed to send verification email:', error);
-      
-      if (error.code === 'auth/too-many-requests') {
+
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'auth/too-many-requests') {
         toast.error(t('auth.errors.tooManyRequests'));
       } else {
         toast.error(t('emailVerification.sendError'));

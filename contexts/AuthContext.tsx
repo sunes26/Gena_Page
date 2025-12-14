@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe, Timestamp } from 'firebase/firestore';
 import { getAuthInstance, getFirestoreInstance } from '@/lib/firebase/client';
 import { ensureUserProfile } from '@/lib/firebase/client-queries';
 
@@ -18,8 +18,8 @@ export interface UserProfile {
   subscriptionPlan: 'free' | 'pro';
   emailVerified: boolean;
   photoURL?: string | null;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp | null;
+  updatedAt: Timestamp | null;
 }
 
 /**

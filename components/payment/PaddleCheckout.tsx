@@ -7,7 +7,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { usePaddleStatus } from '@/components/providers/PaddleProvider';
 import { getPaddleInstance, PADDLE_PRICES } from '@/lib/paddle';
 import type { CheckoutOpenOptions } from '@paddle/paddle-js';
-import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast-helpers';
+import { showError, showLoading, dismissToast } from '@/lib/toast-helpers';
+import { getPaddleErrorMessage } from '@/lib/paddle-errors';
 import { Loader2 } from 'lucide-react';
 
 /**
@@ -77,6 +78,12 @@ export function PaddleCheckout({
     // 사용자 인증 확인
     if (!user) {
       showError('로그인이 필요합니다.');
+      return;
+    }
+
+    // ✅ 이메일 인증 확인
+    if (!user.emailVerified) {
+      showError('이메일 인증이 필요합니다. 이메일을 확인하고 인증을 완료해주세요.');
       return;
     }
 
@@ -177,11 +184,9 @@ export function PaddleCheckout({
     } catch (error) {
       console.error('❌ Failed to open checkout:', error);
       dismissToast(toastId);
-      
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : '결제 페이지를 열 수 없습니다. 잠시 후 다시 시도해주세요.';
-      
+
+      // ✅ Paddle 에러 메시지 한국어로 변환
+      const errorMessage = getPaddleErrorMessage(error);
       showError(errorMessage);
 
       // 에러 콜백

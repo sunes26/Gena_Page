@@ -5,33 +5,34 @@ import Header from '@/components/marketing/Header';
 import Footer from '@/components/marketing/Footer';
 import Hero from '@/components/marketing/Hero';
 import JsonLd from '@/components/seo/JsonLd';
-import { 
+import {
   generateMetadata as genMeta,
-  getOrganizationSchema, 
+  getOrganizationSchema,
   getWebApplicationSchema,
   getFAQSchema,
 } from '@/lib/metadata';
+import { getLocaleFromSearchParams } from '@/lib/locale-utils';
+import { pageMetadata } from '@/lib/i18n-metadata';
 
-// ✅ 페이지 메타데이터 (SEO 최적화)
-export const metadata: Metadata = genMeta({
-  title: 'Gena - AI 웹페이지 요약',
-  description: '웹 서핑 시간은 절반으로, 정보의 깊이는 두 배로. Chrome 확장 프로그램으로 한 번의 클릭으로 웹페이지를 AI가 요약합니다. 무료로 시작하세요.',
-  keywords: [
-    'AI 요약',
-    '웹페이지 요약',
-    '크롬 확장프로그램',
-    'Chrome extension',
-    'ChatGPT',
-    '생산성 도구',
-    '요약 서비스',
-    '한국어 요약',
-    '자동 요약',
-    '정보 관리',
-    'AI 도구',
-  ],
-  canonical: '/',
-  ogImage: '/og-image.png',
-});
+// ✅ 동적 메타데이터 생성 (다국어 지원)
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const locale = getLocaleFromSearchParams(params);
+  const content = pageMetadata.home[locale];
+
+  return genMeta({
+    title: content.title,
+    description: content.description,
+    keywords: content.keywords,
+    canonical: '/',
+    ogImage: '/og-image.png',
+    locale,
+  });
+}
 
 // ✅ Dynamic Import: 뷰포트에 들어올 때만 로드
 const ProblemStatement = lazy(() => import('@/components/marketing/ProblemStatement'));

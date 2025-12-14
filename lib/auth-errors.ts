@@ -17,21 +17,21 @@
  * 
  * try {
  *   await signInWithEmail(email, password);
- * } catch (error: any) {
+ * } catch (error) {
  *   const errorKey = getAuthErrorKey(error);
  *   showError(t(errorKey));
  * }
  * ```
  */
-export function getAuthErrorKey(error: any): string {
+export function getAuthErrorKey(error: unknown): string {
   // 에러 코드 추출
   let code: string;
   
   if (typeof error === 'string') {
     code = error;
-  } else if (error?.code) {
+  } else if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
     code = error.code;
-  } else if (error?.message) {
+  } else if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
     // Error 객체에서 코드 추출 시도
     // Firebase 에러 메시지에서 코드 추출: "Firebase: Error (auth/invalid-email)."
     const match = error.message.match(/\(([^)]+)\)/);
@@ -172,14 +172,14 @@ export function getAuthErrorKey(error: any): string {
  * 
  * try {
  *   await signInWithEmail(email, password);
- * } catch (error: any) {
+ * } catch (error) {
  *   const errorMessage = translateAuthError(error, t);
  *   showError(errorMessage);
  * }
  * ```
  */
 export function translateAuthError(
-  error: any,
+  error: unknown,
   t: (key: string) => string
 ): string {
   const errorKey = getAuthErrorKey(error);
@@ -202,12 +202,12 @@ export type AuthErrorType =
   | 'permission'   // 권한 관련
   | 'unknown';     // 알 수 없음
 
-export function getAuthErrorType(error: any): AuthErrorType {
+export function getAuthErrorType(error: unknown): AuthErrorType {
   let code: string;
-  
+
   if (typeof error === 'string') {
     code = error;
-  } else if (error?.code) {
+  } else if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
     code = error.code;
   } else {
     return 'unknown';

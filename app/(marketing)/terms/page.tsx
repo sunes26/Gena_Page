@@ -145,7 +145,7 @@ export default function TermsOfServicePage() {
                   <section id="article-1" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제1조(목적)</h2>
                     <p>
-                      본 약관은 OCEANCODE(이하 "회사"라 합니다)가 제공하는 Gena 서비스(이하 "서비스"라 합니다)의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
+                      본 약관은 OCEANCODE(이하 &quot;회사&quot;라 합니다)가 제공하는 Gena 서비스(이하 &quot;서비스&quot;라 합니다)의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
                     </p>
                   </section>
 
@@ -154,11 +154,11 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold mb-4">제2조(정의)</h2>
                     <p>본 약관에서 사용하는 용어의 정의는 다음과 같습니다.</p>
                     <ol className="list-decimal pl-6 space-y-2 mt-2">
-                      <li><strong>"서비스"</strong>란 회사가 제공하는 AI 기반 웹페이지 요약 서비스를 의미합니다.</li>
-                      <li><strong>"회원"</strong>이란 본 약관에 동의하고 회사와 이용계약을 체결한 자를 의미합니다.</li>
-                      <li><strong>"아이디(ID)"</strong>란 회원의 식별과 서비스 이용을 위하여 회원이 설정하고 회사가 승인하는 문자 또는 숫자의 조합을 의미합니다.</li>
-                      <li><strong>"비밀번호"</strong>란 회원이 부여받은 아이디와 일치된 회원임을 확인하고 회원의 권익 보호를 위하여 회원이 선정한 문자와 숫자의 조합을 의미합니다.</li>
-                      <li><strong>"유료서비스"</strong>란 회사가 유료로 제공하는 각종 서비스를 의미합니다.</li>
+                      <li><strong>&quot;서비스&quot;</strong>란 회사가 제공하는 AI 기반 웹페이지 요약 서비스를 의미합니다.</li>
+                      <li><strong>&quot;회원&quot;</strong>이란 본 약관에 동의하고 회사와 이용계약을 체결한 자를 의미합니다.</li>
+                      <li><strong>&quot;아이디(ID)&quot;</strong>란 회원의 식별과 서비스 이용을 위하여 회원이 설정하고 회사가 승인하는 문자 또는 숫자의 조합을 의미합니다.</li>
+                      <li><strong>&quot;비밀번호&quot;</strong>란 회원이 부여받은 아이디와 일치된 회원임을 확인하고 회원의 권익 보호를 위하여 회원이 선정한 문자와 숫자의 조합을 의미합니다.</li>
+                      <li><strong>&quot;유료서비스&quot;</strong>란 회사가 유료로 제공하는 각종 서비스를 의미합니다.</li>
                     </ol>
                   </section>
 
@@ -186,7 +186,7 @@ export default function TermsOfServicePage() {
                   <section id="article-5" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제5조(이용 계약의 성립)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>이용계약은 회원이 되고자 하는 자(이하 "가입신청자"라 합니다)가 본 약관의 내용에 대하여 동의를 한 다음 회원가입신청을 하고, 회사가 이러한 신청에 대하여 승낙함으로써 체결됩니다.</li>
+                      <li>이용계약은 회원이 되고자 하는 자(이하 &quot;가입신청자&quot;라 합니다)가 본 약관의 내용에 대하여 동의를 한 다음 회원가입신청을 하고, 회사가 이러한 신청에 대하여 승낙함으로써 체결됩니다.</li>
                       <li>회사는 가입신청자의 신청에 대하여 승낙함을 원칙으로 합니다. 다만, 회사는 다음 각 호에 해당하는 신청에 대하여는 승낙을 하지 않거나 사후에 이용계약을 해지할 수 있습니다.
                         <ul className="list-disc pl-6 mt-2">
                           <li>가입신청자가 본 약관에 의하여 이전에 회원자격을 상실한 적이 있는 경우</li>
@@ -203,7 +203,7 @@ export default function TermsOfServicePage() {
                   <section id="article-6" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제6조(회원 가입)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>회원가입은 가입신청자가 본 약관 및 개인정보처리방침의 내용에 대하여 동의한 후, 회사가 정한 가입 양식에 따라 회원정보를 기입하고 "가입하기" 또는 "확인" 등의 버튼을 누르는 방법으로 신청합니다.</li>
+                      <li>회원가입은 가입신청자가 본 약관 및 개인정보처리방침의 내용에 대하여 동의한 후, 회사가 정한 가입 양식에 따라 회원정보를 기입하고 &quot;가입하기&quot; 또는 &quot;확인&quot; 등의 버튼을 누르는 방법으로 신청합니다.</li>
                       <li>회사는 제1항과 같이 회원으로 가입할 것을 신청한 자 중 다음 각 호에 해당하지 않는 한 회원으로 등록합니다.
                         <ul className="list-disc pl-6 mt-2">
                           <li>등록 내용에 허위, 기재누락, 오기가 있는 경우</li>
@@ -229,7 +229,7 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold mb-4">제8조(개인정보 보호)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
                       <li>회사는 관련 법령이 정하는 바에 따라 회원의 개인정보를 보호하기 위해 노력합니다.</li>
-                      <li>회원의 개인정보 보호에 관해서는 관련 법령 및 회사가 정하는 "개인정보처리방침"에 정한 바에 따릅니다.</li>
+                      <li>회원의 개인정보 보호에 관해서는 관련 법령 및 회사가 정하는 &quot;개인정보처리방침&quot;에 정한 바에 따릅니다.</li>
                       <li>회사는 회원의 귀책사유로 인하여 노출된 정보에 대해서 책임을 지지 않습니다.</li>
                     </ol>
                   </section>
@@ -364,7 +364,7 @@ export default function TermsOfServicePage() {
                   <section id="article-1" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 1 (Purpose)</h2>
                     <p>
-                      These Terms of Service (hereinafter referred to as "Terms") establish the rights, obligations, responsibilities, and other necessary matters between OCEANCODE (hereinafter referred to as "the Company") and users regarding the use of the Gena service (hereinafter referred to as "Service") provided by the Company.
+                      These Terms of Service (hereinafter referred to as &quot;Terms&quot;) establish the rights, obligations, responsibilities, and other necessary matters between OCEANCODE (hereinafter referred to as &quot;the Company&quot;) and users regarding the use of the Gena service (hereinafter referred to as &quot;Service&quot;) provided by the Company.
                     </p>
                   </section>
 
@@ -373,11 +373,11 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold mb-4">Article 2 (Definitions)</h2>
                     <p>The definitions of terms used in these Terms are as follows:</p>
                     <ol className="list-decimal pl-6 space-y-2 mt-2">
-                      <li><strong>"Service"</strong> refers to the AI-based web page summarization service provided by the Company.</li>
-                      <li><strong>"Member"</strong> refers to a person who has agreed to these Terms and entered into a use agreement with the Company.</li>
-                      <li><strong>"ID"</strong> refers to a combination of letters or numbers set by the Member and approved by the Company for Member identification and service use.</li>
-                      <li><strong>"Password"</strong> refers to a combination of letters and numbers selected by the Member to verify that they match the assigned ID and protect the Member's rights and interests.</li>
-                      <li><strong>"Paid Service"</strong> refers to various services provided by the Company for a fee.</li>
+                      <li><strong>&quot;Service&quot;</strong> refers to the AI-based web page summarization service provided by the Company.</li>
+                      <li><strong>&quot;Member&quot;</strong> refers to a person who has agreed to these Terms and entered into a use agreement with the Company.</li>
+                      <li><strong>&quot;ID&quot;</strong> refers to a combination of letters or numbers set by the Member and approved by the Company for Member identification and service use.</li>
+                      <li><strong>&quot;Password&quot;</strong> refers to a combination of letters and numbers selected by the Member to verify that they match the assigned ID and protect the Member&apos;s rights and interests.</li>
+                      <li><strong>&quot;Paid Service&quot;</strong> refers to various services provided by the Company for a fee.</li>
                     </ol>
                   </section>
 
@@ -385,9 +385,9 @@ export default function TermsOfServicePage() {
                   <section id="article-3" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 3 (Publication and Revision of Terms)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>The Company posts the content of these Terms on the service's initial screen for easy access by Members.</li>
+                      <li>The Company posts the content of these Terms on the service&apos;s initial screen for easy access by Members.</li>
                       <li>The Company may revise these Terms as necessary within the scope that does not violate relevant laws.</li>
-                      <li>When revising the Terms, the Company shall post both the current and revised Terms on the service's initial screen from at least 7 days before the effective date until the day before, clearly stating the effective date and reasons for revision. However, for revisions unfavorable to Members, notice shall be given at least 30 days in advance.</li>
+                      <li>When revising the Terms, the Company shall post both the current and revised Terms on the service&apos;s initial screen from at least 7 days before the effective date until the day before, clearly stating the effective date and reasons for revision. However, for revisions unfavorable to Members, notice shall be given at least 30 days in advance.</li>
                       <li>Members who do not agree to the revised Terms may request membership withdrawal. If they continue to use the Service after the effective date of the revised Terms, they are deemed to have agreed to the changes.</li>
                     </ol>
                   </section>
@@ -405,14 +405,14 @@ export default function TermsOfServicePage() {
                   <section id="article-5" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 5 (Formation of Use Agreement)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>A use agreement is formed when a prospective member (hereinafter referred to as "Applicant") agrees to these Terms, applies for membership, and the Company accepts such application.</li>
-                      <li>The Company accepts Applicants' applications in principle. However, the Company may not accept or may subsequently terminate use agreements for applications falling under any of the following:
+                      <li>A use agreement is formed when a prospective member (hereinafter referred to as &quot;Applicant&quot;) agrees to these Terms, applies for membership, and the Company accepts such application.</li>
+                      <li>The Company accepts Applicants&apos; applications in principle. However, the Company may not accept or may subsequently terminate use agreements for applications falling under any of the following:
                         <ul className="list-disc pl-6 mt-2">
                           <li>When the Applicant has previously lost membership status under these Terms</li>
-                          <li>When using another person's name</li>
+                          <li>When using another person&apos;s name</li>
                           <li>When providing false information or not providing required information</li>
                           <li>When a minor under 14 years old applies without legal guardian consent</li>
-                          <li>When approval is impossible due to the User's fault or when applying in violation of other regulations</li>
+                          <li>When approval is impossible due to the User&apos;s fault or when applying in violation of other regulations</li>
                         </ul>
                       </li>
                     </ol>
@@ -422,14 +422,14 @@ export default function TermsOfServicePage() {
                   <section id="article-6" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 6 (Member Registration)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>Membership registration is completed by agreeing to these Terms and Privacy Policy, entering member information according to the Company's registration form, and clicking buttons such as "Sign Up" or "Confirm."</li>
+                      <li>Membership registration is completed by agreeing to these Terms and Privacy Policy, entering member information according to the Company&apos;s registration form, and clicking buttons such as &quot;Sign Up&quot; or &quot;Confirm.&quot;</li>
                       <li>The Company registers as members those who applied for membership under Paragraph 1, unless they fall under any of the following:
                         <ul className="list-disc pl-6 mt-2">
                           <li>When registration content contains false information, omissions, or errors</li>
                           <li>When the Company determines that registration would significantly hinder its technical operations</li>
                         </ul>
                       </li>
-                      <li>The membership agreement is formed when the Company's acceptance reaches the Member.</li>
+                      <li>The membership agreement is formed when the Company&apos;s acceptance reaches the Member.</li>
                     </ol>
                   </section>
 
@@ -447,9 +447,9 @@ export default function TermsOfServicePage() {
                   <section id="article-8" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 8 (Privacy Protection)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>The Company strives to protect Members' personal information in accordance with relevant laws.</li>
-                      <li>Protection of Members' personal information shall be governed by relevant laws and the Company's "Privacy Policy."</li>
-                      <li>The Company is not responsible for information disclosed due to Members' fault.</li>
+                      <li>The Company strives to protect Members&apos; personal information in accordance with relevant laws.</li>
+                      <li>Protection of Members&apos; personal information shall be governed by relevant laws and the Company&apos;s &quot;Privacy Policy.&quot;</li>
+                      <li>The Company is not responsible for information disclosed due to Members&apos; fault.</li>
                     </ol>
                   </section>
 
@@ -470,17 +470,17 @@ export default function TermsOfServicePage() {
                       <li>Members shall not engage in the following acts:
                         <ul className="list-disc pl-6 mt-2">
                           <li>Registering false information during application or changes</li>
-                          <li>Misappropriating others' information</li>
+                          <li>Misappropriating others&apos; information</li>
                           <li>Modifying information posted by the Company</li>
                           <li>Transmitting or posting information other than that designated by the Company (such as computer programs)</li>
-                          <li>Infringing on the Company's or third parties' intellectual property rights including copyrights</li>
+                          <li>Infringing on the Company&apos;s or third parties&apos; intellectual property rights including copyrights</li>
                           <li>Damaging the reputation of the Company or third parties or interfering with their business</li>
                           <li>Disclosing or posting obscene or violent messages, images, audio, or other information contrary to public morals</li>
                           <li>Using the Service for commercial purposes</li>
                           <li>Other illegal or improper acts</li>
                         </ul>
                       </li>
-                      <li>Members must comply with relevant laws, provisions of these Terms, usage guidelines, precautions announced regarding the Service, and matters notified by the Company, and shall not engage in acts interfering with the Company's business.</li>
+                      <li>Members must comply with relevant laws, provisions of these Terms, usage guidelines, precautions announced regarding the Service, and matters notified by the Company, and shall not engage in acts interfering with the Company&apos;s business.</li>
                     </ol>
                   </section>
 
@@ -520,7 +520,7 @@ export default function TermsOfServicePage() {
                       <li>When Members fall under any of the following, the Company may restrict or suspend membership status:
                         <ul className="list-disc pl-6 mt-2">
                           <li>Registering false content during membership application</li>
-                          <li>Threatening e-commerce order by interfering with others' service use or misappropriating information</li>
+                          <li>Threatening e-commerce order by interfering with others&apos; service use or misappropriating information</li>
                           <li>Using the Service to engage in acts prohibited by law or these Terms or contrary to public morals</li>
                         </ul>
                       </li>
@@ -542,7 +542,7 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-bold mb-4">Article 15 (Disclaimer)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
                       <li>The Company is exempt from liability for service provision when unable to provide services due to natural disasters or equivalent force majeure.</li>
-                      <li>The Company is not liable for service use disruptions due to Members' fault.</li>
+                      <li>The Company is not liable for service use disruptions due to Members&apos; fault.</li>
                       <li>The Company is not liable for the reliability, accuracy, or content of information, materials, and facts posted by Members regarding the Service.</li>
                       <li>The Company is exempt from liability for transactions between Members or between Members and third parties mediated through the Service.</li>
                       <li>The Company is not liable for use of free services unless specifically required by law.</li>

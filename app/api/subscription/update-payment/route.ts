@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyIdToken } from '@/lib/firebase/admin-utils';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { getUpdatePaymentMethodUrl } from '@/lib/paddle-server';
+import { applyRateLimit, getIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 
 /**
  * 결제 수단 변경 URL 생성
@@ -44,6 +45,13 @@ export async function POST(request: NextRequest) {
     const userId = decodedToken.uid;
     console.log(`👤 User authenticated: ${userId}`);
 
+    // Rate Limiting (사용자별)
+    const identifier = getIdentifier(request, userId);
+    const rateLimitResponse = await applyRateLimit(identifier, RATE_LIMITS.SUBSCRIPTION_MUTATE);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     // 2. Firestore에서 구독 정보 조회
     const db = getAdminFirestore();
     const subscriptionRef = db.collection('subscription');
@@ -66,6 +74,22 @@ export async function POST(request: NextRequest) {
     }
 
     const subscriptionData = subscriptionsSnapshot.docs[0].data();
+
+    // ✅ Security: Explicit ownership verification
+    if (subscriptionData.userId !== userId) {
+      console.error('Subscription ownership mismatch:', {
+        authenticated: userId,
+        subscription: subscriptionData.userId,
+      });
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: '이 구독에 대한 권한이 없습니다.',
+        },
+        { status: 403 }
+      );
+    }
+
     const paddleSubscriptionId = subscriptionData.paddleSubscriptionId;
 
     console.log(`📋 Subscription found: ${paddleSubscriptionId}`);
@@ -144,7 +168,7 @@ export async function GET(request: NextRequest) {
 
     try {
       decodedToken = await verifyIdToken(token);
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
         { status: 401 }
@@ -173,6 +197,21 @@ export async function GET(request: NextRequest) {
     }
 
     const subscription = subscriptions.docs[0].data();
+
+    // ✅ Security: Explicit ownership verification
+    if (subscription.userId !== userId) {
+      console.error('Subscription ownership mismatch:', {
+        authenticated: userId,
+        subscription: subscription.userId,
+      });
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: '이 구독에 대한 권한이 없습니다.',
+        },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

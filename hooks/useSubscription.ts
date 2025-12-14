@@ -2,11 +2,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  collection, 
-  query, 
-  where, 
+import {
+  collection,
+  query,
+  where,
   onSnapshot,
+  Timestamp,
+  DocumentSnapshot,
+  DocumentData,
 } from 'firebase/firestore';
 import { getFirestoreInstance } from '@/lib/firebase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -51,34 +54,49 @@ export interface UseSubscriptionReturn {
 /**
  * Timestamp를 Date로 변환
  */
-function timestampToDate(timestamp: any): Date {
+function timestampToDate(timestamp: unknown): Date {
   if (!timestamp) return new Date();
   if (timestamp instanceof Date) return timestamp;
-  if (timestamp.toDate) return timestamp.toDate();
-  if (timestamp._seconds) {
-    return new Date(timestamp._seconds * 1000);
+  if (timestamp instanceof Timestamp) return timestamp.toDate();
+
+  // Firestore Timestamp 객체 (toDate 메서드 있음)
+  if (typeof timestamp === 'object' && timestamp !== null && 'toDate' in timestamp) {
+    return (timestamp as { toDate: () => Date }).toDate();
   }
-  return new Date(timestamp);
+
+  // Legacy Timestamp 형식 (_seconds 필드)
+  if (typeof timestamp === 'object' && timestamp !== null && '_seconds' in timestamp) {
+    const seconds = (timestamp as { _seconds: number })._seconds;
+    return new Date(seconds * 1000);
+  }
+
+  // 문자열이나 숫자로 변환 시도
+  return new Date(timestamp as string | number);
 }
 
 /**
  * 구독 문서를 Subscription 타입으로 변환
  */
-function convertSubscriptionDoc(doc: any): Subscription {
+function convertSubscriptionDoc(doc: DocumentSnapshot<DocumentData>): Subscription {
   const data = doc.data();
+
+  if (!data) {
+    throw new Error('Document data is undefined');
+  }
+
   return {
     id: doc.id,
-    userId: data.userId,
-    paddleSubscriptionId: data.paddleSubscriptionId || '',
-    paddleCustomerId: data.paddleCustomerId || '',
-    plan: data.plan || 'free',
-    status: data.status || 'active',
+    userId: data.userId as string,
+    paddleSubscriptionId: (data.paddleSubscriptionId as string) || '',
+    paddleCustomerId: (data.paddleCustomerId as string) || '',
+    plan: (data.plan as 'free' | 'pro') || 'free',
+    status: (data.status as Subscription['status']) || 'active',
     currentPeriodEnd: timestampToDate(data.currentPeriodEnd),
-    cancelAtPeriodEnd: data.cancelAtPeriodEnd || false,
+    cancelAtPeriodEnd: (data.cancelAtPeriodEnd as boolean) || false,
     nextBillingDate: data.nextBillingDate ? timestampToDate(data.nextBillingDate) : null,
-    price: data.price || 0,
-    currency: data.currency || 'KRW',
-    priceId: data.priceId || '',
+    price: (data.price as number) || 0,
+    currency: (data.currency as string) || 'KRW',
+    priceId: (data.priceId as string) || '',
     createdAt: timestampToDate(data.createdAt),
     updatedAt: timestampToDate(data.updatedAt),
   };

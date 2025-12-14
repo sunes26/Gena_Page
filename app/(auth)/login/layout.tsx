@@ -1,23 +1,24 @@
-// app/(auth)/layout.tsx
+// app/(auth)/login/layout.tsx
 import type { Metadata } from 'next';
+import { generateMetadata as genMeta } from '@/lib/metadata';
+import { pageMetadata } from '@/lib/i18n-metadata';
 
 /**
- * 인증 페이지 그룹 레이아웃
- * 
- * 이 레이아웃은 /login, /signup, /forgot-password 등
- * 인증 관련 페이지들의 공통 설정을 관리합니다.
- * 
- * 참고: 개별 페이지가 'use client'를 사용하므로,
+ * 로그인 페이지 레이아웃
+ *
+ * 참고: 페이지가 'use client'를 사용하므로,
  * 메타데이터는 이 레이아웃에서 설정합니다.
+ * Layout은 searchParams를 받을 수 없으므로 기본 locale 사용
  */
 
-// 기본 메타데이터 (모든 인증 페이지에 공통 적용)
-export const metadata: Metadata = {
-  robots: {
-    index: true,  // 인증 페이지도 검색 결과에 노출
-    follow: true,
-  },
-};
+// 메타데이터 (기본 한국어, ?lang=en 시 클라이언트에서 처리)
+export const metadata: Metadata = genMeta({
+  title: pageMetadata.login.ko.title,
+  description: pageMetadata.login.ko.description,
+  canonical: '/login',
+  noIndex: false,
+  locale: 'ko',
+});
 
 export default function AuthLayout({
   children,

@@ -21,6 +21,7 @@
 - [인증 에러 처리](#-인증-에러-처리)
 - [구현된 기능](#-구현된-기능)
 - [설정 페이지 변경사항](#-설정-페이지-변경사항)
+- [코드 품질 개선](#-코드-품질-개선-v210)
 - [해결된 주요 이슈](#-해결된-주요-이슈)
 - [개발 가이드](#-개발-가이드)
 - [배포](#-배포)
@@ -300,6 +301,10 @@ C:.
 └─types                              # TypeScript 타입
         index.ts                     # 공통 타입 정의
         paddle.ts                    # Paddle 타입 정의
+
+📁 특수 문서:
+├── ICONS_NEEDED.md                  # SEO/PWA 아이콘 가이드 📖
+└── 수정가이드.md                     # 설정 페이지 변경 가이드
 
 ✅ = 구현 완료
 ```
@@ -1135,7 +1140,42 @@ function LanguageSelector() {
 - [ ] Paddle Webhook URL 업데이트
 - [ ] 프로덕션 도메인 허용 설정
 - [ ] SEO 메타태그 확인
+- [ ] **PWA 아이콘 생성 및 배치** (참고: `ICONS_NEEDED.md`)
 - [ ] 에러 모니터링 설정 (Sentry 등)
+
+---
+
+## 🎨 SEO & PWA 아이콘 설정
+
+### 필수 아이콘 파일
+
+이 프로젝트는 SEO 최적화 및 PWA 기능을 위해 다음 아이콘 파일이 필요합니다:
+
+| 파일 | 크기 | 용도 | 우선순위 |
+|------|------|------|---------|
+| `favicon.ico` | 32x32 | 브라우저 탭 | 🔴 Critical |
+| `og-image.png` | 1200x630 | 소셜 미디어 미리보기 | 🔴 Critical |
+| `icon-192x192.png` | 192x192 | PWA 앱 아이콘 | 🟡 High |
+| `icon-512x512.png` | 512x512 | PWA 앱 아이콘 (고해상도) | 🟡 High |
+| `apple-touch-icon.png` | 180x180 | iOS 홈 화면 | 🟡 High |
+
+자세한 설정 방법 및 아이콘 생성 가이드는 **[ICONS_NEEDED.md](./ICONS_NEEDED.md)** 문서를 참고하세요.
+
+### 빠른 시작
+
+```bash
+# PWA 아이콘 생성기 사용 (권장)
+# https://realfavicongenerator.net 또는
+# https://www.pwabuilder.com/imageGenerator
+
+# 또는 ImageMagick으로 기존 로고에서 생성
+cd public
+convert images/logo.png -resize 32x32 favicon.ico
+convert images/logo.png -resize 192x192 icon-192x192.png
+convert images/logo.png -resize 512x512 icon-512x512.png
+convert images/logo.png -resize 180x180 apple-touch-icon.png
+convert images/logo.png -resize 1200x630 -gravity center -extent 1200x630 og-image.png
+```
 
 ---
 
@@ -1211,13 +1251,217 @@ function LanguageSelector() {
 
 ---
 
-**Last Updated:** 2025년 12월 2일  
-**Version:** 2.0.0  
+**Last Updated:** 2025년 12월 14일
+**Version:** 2.1.0
 **Status:** 🚀 Active Development
 
 ---
 
+## 🎯 코드 품질 개선 (v2.1.0)
+
+### ESLint 에러 전체 수정 완료 ✅
+
+전체 코드베이스에서 발견된 모든 ESLint 에러를 수정하여 프로덕션 빌드가 성공적으로 완료되었습니다.
+
+#### 수정된 에러 통계
+
+| 카테고리 | 파일 수 | 에러 수 | 상태 |
+|---------|---------|---------|------|
+| **any 타입 제거** | 18개 | 60개 | ✅ 완료 |
+| **특수문자 이스케이프** | 3개 | 50개+ | ✅ 완료 |
+| **코드 품질** | 전체 | - | ✅ 완료 |
+
+#### 1. 타입 안정성 개선 (60개 에러 수정)
+
+모든 `any` 타입을 제거하고 적절한 TypeScript 타입으로 교체했습니다.
+
+**Lib 파일 (7개 파일, 26개 에러)**
+```typescript
+// ❌ Before
+function handleError(error: any) { ... }
+const data: Record<string, any> = { ... };
+
+// ✅ After
+function handleError(error: unknown) {
+  if (error && typeof error === 'object' && 'code' in error) {
+    // 타입 가드로 안전하게 접근
+  }
+}
+const data: Record<string, unknown> = { ... };
+```
+
+**수정된 파일:**
+- `lib/auth-errors.ts` - 에러 처리 타입 개선
+- `lib/auth.ts` - Firebase 인증 에러 타입 개선
+- `lib/firebase/queries.ts` - QueryDocumentSnapshot 타입 사용
+- `lib/metadata.ts` - Record 타입 개선
+- `lib/paddle-server.ts` - crypto require → import 변환
+- `lib/paddle-webhook.ts` - Paddle 웹훅 데이터 타입 개선
+- `lib/paddle.ts` - Window 타입 확장
+
+**API 라우트 (4개 파일, 16개 에러)**
+```typescript
+// ✅ Paddle 웹훅 데이터 타입 인터페이스 생성
+interface PaddleSubscriptionData {
+  id: string;
+  status: string;
+  customer_id: string;
+  // ... 필요한 필드 정의
+}
+
+function isPaddleSubscriptionData(data: unknown): data is PaddleSubscriptionData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'id' in data &&
+    'status' in data
+  );
+}
+
+async function handleSubscriptionCreated(data: unknown) {
+  if (!isPaddleSubscriptionData(data)) {
+    throw new Error('Invalid subscription data');
+  }
+  // 이제 data는 안전하게 타입이 지정됨
+}
+```
+
+**수정된 파일:**
+- `app/api/subscription/cancel/route.ts`
+- `app/api/subscription/sync/route.ts`
+- `app/api/test-paddle/route.ts`
+- `app/api/webhooks/paddle/route.ts` - 타입 가드 추가
+
+**컴포넌트 (6개 파일, 11개 에러)**
+```typescript
+// ✅ Recharts 타입 정의
+interface ChartDataItem {
+  date: string;
+  label: string;
+  count: number;
+}
+
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+}
+
+// ✅ Paddle SDK 타입 정의
+interface PaddleSDK {
+  Environment?: { set: (env: 'sandbox' | 'production') => void };
+  Setup: (options: PaddleSetupOptions) => void;
+}
+```
+
+**수정된 파일:**
+- `components/dashboard/EmailVerificationModal.tsx`
+- `components/dashboard/ProfileSettings.tsx`
+- `components/dashboard/SecuritySettings.tsx`
+- `components/dashboard/UsageChart.tsx` - Recharts 타입 정의
+- `components/providers/PaddleProvider.tsx` - Paddle SDK 타입 정의
+- `components/seo/JsonLd.tsx`
+
+#### 2. React JSX 특수문자 이스케이프 (50개+ 에러 수정)
+
+법률 문서 및 테스트 페이지의 모든 특수문자를 올바르게 이스케이프했습니다.
+
+```typescript
+// ❌ Before
+<li>"회원"이란 본 약관에 동의하고...</li>
+<li>localStorage에 'Gena_locale' 저장</li>
+
+// ✅ After
+<li>&quot;회원&quot;이란 본 약관에 동의하고...</li>
+<li>localStorage에 &apos;Gena_locale&apos; 저장</li>
+```
+
+**수정된 파일:**
+- `app/(marketing)/privacy/page.tsx` - 개인정보처리방침
+- `app/(marketing)/terms/page.tsx` - 이용약관
+- `app/test-language/page.tsx` - 언어 테스트 페이지
+
+#### 3. 빌드 결과
+
+```bash
+✓ Compiled successfully in 4.5s
+✓ Linting and checking validity of types
+✓ Generating static pages (32/32)
+
+Route (app)                    Size     First Load JS
+┌ ○ /                       5.91 kB         252 kB
+├ ○ /dashboard              3.72 kB         251 kB
+├ ○ /history               11.2 kB         272 kB
+├ ○ /login                  3.19 kB         235 kB
+└ ... (32개 페이지 성공)
+
+✅ 블로킹 에러: 0개
+⚠️  경고: 30개 (빌드에 영향 없음)
+```
+
+#### 4. 타입 안정성 향상 효과
+
+**Before:**
+- `any` 타입 사용: 60개 위치
+- 런타임 타입 에러 가능성: 높음
+- IDE 자동완성: 제한적
+
+**After:**
+- `any` 타입 사용: 0개
+- 런타임 타입 에러 가능성: 낮음 (타입 가드 사용)
+- IDE 자동완성: 완전한 타입 추론
+
+#### 5. 주요 타입 패턴
+
+**에러 처리:**
+```typescript
+// unknown + 타입 가드 패턴
+catch (error: unknown) {
+  if (error && typeof error === 'object' && 'code' in error) {
+    // 안전하게 error.code 접근
+  }
+}
+```
+
+**외부 라이브러리 타입:**
+```typescript
+// Window 객체 확장
+const paddle = (window as Window & { Paddle?: PaddleSDK }).Paddle;
+
+// 제네릭 객체
+const data: Record<string, unknown> = { ... };
+```
+
+**API 데이터 검증:**
+```typescript
+// 타입 가드 함수
+function isValidData(data: unknown): data is ExpectedType {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'requiredField' in data
+  );
+}
+```
+
+---
+
 ## 📜 변경 이력
+
+### v2.1.0 (2025-12-14) 🎯
+- ✅ **코드 품질 대폭 개선**
+  - ESLint 전체 에러 수정 완료 (60개)
+  - TypeScript `any` 타입 전면 제거
+  - 타입 가드 및 타입 안정성 강화
+  - React JSX 특수문자 이스케이프 (50개+)
+- 🔧 **타입 시스템 개선**
+  - Paddle 웹훅 데이터 타입 인터페이스 정의
+  - Recharts 컴포넌트 타입 정의
+  - Firebase Firestore 쿼리 타입 개선
+- 🚀 **빌드 최적화**
+  - 프로덕션 빌드 성공 (32개 페이지)
+  - ESLint 빌드 체크 활성화
+  - 타입 체크 통과
 
 ### v2.0.0 (2025-12-02) ⭐
 - ✨ **설정 페이지 대폭 개선**

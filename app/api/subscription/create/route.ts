@@ -4,6 +4,8 @@ import { verifyIdToken } from '@/lib/firebase/admin-utils';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { createPaddleTransaction } from '@/lib/paddle-server';
 import { PADDLE_PRICES } from '@/lib/paddle';
+import { validateRequestBody, createSubscriptionSchema } from '@/lib/validation';
+import { applyRateLimit, getIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 
 /**
  * Pro 플랜 구독 생성
@@ -43,29 +45,23 @@ export async function POST(request: NextRequest) {
     const userId = decodedToken.uid;
     const userEmail = decodedToken.email;
 
-    // 2. 요청 본문 파싱
-    let body;
-    try {
-      body = await request.json();
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+    // Rate Limiting (사용자별)
+    const identifier = getIdentifier(request, userId);
+    const rateLimitResponse = await applyRateLimit(identifier, RATE_LIMITS.SUBSCRIPTION_CREATE);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
+    // 2. 요청 본문 검증
+    const validation = await validateRequestBody(request, createSubscriptionSchema);
+    if (!validation.success) {
+      return validation.response;
     }
 
     const {
       priceId = PADDLE_PRICES.pro_monthly,
       returnUrl,
-    } = body;
-
-    // PriceId 검증
-    if (!priceId) {
-      return NextResponse.json(
-        { error: 'priceId is required' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // 3. 이미 Pro 구독 중인지 확인
     const db = getAdminFirestore();
@@ -171,15 +167,16 @@ export async function POST(request: NextRequest) {
 /**
  * 구독 상태 확인
  * GET /api/subscription/create?userId={userId}
- * 
+ *
  * 테스트용 엔드포인트 (선택사항)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Query parameter에서 userId 가져오기
+    // Query parameter 검증
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
 
+    // userId가 없으면 에러
+    const userId = searchParams.get('userId');
     if (!userId) {
       return NextResponse.json(
         { error: 'userId is required' },
@@ -199,7 +196,7 @@ export async function GET(request: NextRequest) {
             { status: 403 }
           );
         }
-      } catch (error) {
+      } catch {
         return NextResponse.json(
           { error: 'Invalid token' },
           { status: 401 }

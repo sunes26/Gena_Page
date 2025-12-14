@@ -48,7 +48,7 @@ export default function NotificationSettings({ userId }: NotificationSettingsPro
       );
 
       showSuccess(t('settings.notifications.success'));
-    } catch (error) {
+    } catch {
       showError(t('common.error'));
     } finally {
       setLoading(false);

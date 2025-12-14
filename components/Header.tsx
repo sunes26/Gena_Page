@@ -4,13 +4,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/lib/auth';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function Header() {
   const { user, loading } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -35,7 +38,7 @@ export function Header() {
         {/* 네비게이션 */}
         <nav className="flex items-center gap-6">
           {loading ? (
-            <div className="text-gray-500 text-sm">Loading...</div>
+            <div className="text-gray-500 text-sm">{t('common.loading')}</div>
           ) : user ? (
             <>
               <Link
@@ -54,9 +57,11 @@ export function Header() {
               {/* 사용자 정보 */}
               <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
                 {user.photoURL ? (
-                  <img
+                  <Image
                     src={user.photoURL}
                     alt={user.displayName || 'User'}
+                    width={32}
+                    height={32}
                     className="w-8 h-8 rounded-full"
                   />
                 ) : (

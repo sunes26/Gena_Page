@@ -2,7 +2,6 @@
 'use client';
 
 import { LucideIcon } from 'lucide-react';
-import { useTranslation } from '@/hooks/useTranslation';
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -23,7 +22,6 @@ export default function EmptyState({
   action,
   variant = 'default',
 }: EmptyStateProps) {
-  const { locale } = useTranslation();
 
   const sizes = {
     compact: {

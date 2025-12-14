@@ -32,10 +32,10 @@ export default function ForgotPasswordPage() {
       await resetPassword(email);
       setSuccess(true);
       setEmail('');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Reset password error:', error);
       // translateAuthError 사용 - 다국어 지원 에러 메시지
-      const errorMessage = error.code
+      const errorMessage = error && typeof error === 'object' && 'code' in error
         ? translateAuthError(error, t)
         : t('auth.errors.resetFailed');
       setError(errorMessage);

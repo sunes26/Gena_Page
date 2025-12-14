@@ -1,6 +1,8 @@
 // app/api/auth/session/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth } from '@/lib/firebase/admin';
+import { validateRequestBody, createSessionSchema } from '@/lib/validation';
+import { applyRateLimit, getIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 
 /**
  * 세션 쿠키 생성
@@ -8,15 +10,20 @@ import { getAdminAuth } from '@/lib/firebase/admin';
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. 요청 본문에서 ID 토큰 추출
-    const { idToken } = await request.json();
-
-    if (!idToken) {
-      return NextResponse.json(
-        { error: 'ID token is required' },
-        { status: 400 }
-      );
+    // 1. Rate Limiting (Brute Force 방지)
+    const identifier = getIdentifier(request);
+    const rateLimitResponse = await applyRateLimit(identifier, RATE_LIMITS.AUTH);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
+
+    // 2. 요청 본문 검증
+    const validation = await validateRequestBody(request, createSessionSchema);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const { idToken } = validation.data;
 
     // 2. ID 토큰 검증
     const auth = getAdminAuth();

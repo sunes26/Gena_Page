@@ -25,8 +25,9 @@ export function getLocale(): Locale {
     if (stored === 'ko' || stored === 'en') {
       return stored;
     }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error('Failed to read locale from localStorage:', error);
+    // Silently fail - not critical
   }
 
   return DEFAULT_LOCALE;
@@ -43,9 +44,9 @@ export function setLocale(locale: Locale): void {
 
   try {
     localStorage.setItem(STORAGE_KEY, locale);
-    console.log('✅ Locale saved:', locale);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error('Failed to save locale to localStorage:', error);
+    // Silently fail - not critical
   }
 }
 
@@ -75,13 +76,14 @@ export function detectBrowserLocale(): Locale {
 
   try {
     const browserLang = navigator.language.toLowerCase();
-    
+
     // 한국어 브라우저인 경우
     if (browserLang.startsWith('ko')) {
       return 'ko';
     }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error('Failed to detect browser locale:', error);
+    // Silently fail - not critical
   }
 
   return DEFAULT_LOCALE;
@@ -89,15 +91,16 @@ export function detectBrowserLocale(): Locale {
 
 /**
  * 언어 초기화
- * 1. 쿼리 파라미터 확인 (?lang=ko or ?lang=en)
- * 2. localStorage 확인
- * 3. 기본 언어 사용 (en)
- * 
+ * 1. 쿼리 파라미터 확인 (?lang=ko or ?lang=en) - 최우선
+ * 2. 브라우저 언어 확인 (navigator.language) - 항상 확인
+ * 3. localStorage 확인 - 브라우저 언어가 한/영이 아닐 경우
+ * 4. 기본 언어 사용 (en)
+ *
  * @param searchParams URLSearchParams 객체
  * @returns 'ko' | 'en'
  */
 export function initializeLocale(searchParams?: URLSearchParams): Locale {
-  // 1. 쿼리 파라미터 우선
+  // 1. 쿼리 파라미터 우선 (수동 선택)
   if (searchParams) {
     const queryLocale = detectLocaleFromQuery(searchParams);
     if (queryLocale) {
@@ -106,9 +109,19 @@ export function initializeLocale(searchParams?: URLSearchParams): Locale {
     }
   }
 
-  // 2. localStorage 확인
+  // 2. 브라우저 언어 확인 (크롬 언어 설정에 따라 자동 전환)
+  const browserLocale = detectBrowserLocale();
+
+  // 브라우저가 한국어인 경우 한국어로, 아니면 영어로
+  if (browserLocale === 'ko') {
+    setLocale('ko');
+    return 'ko';
+  }
+
+  // 3. localStorage 확인 (브라우저 언어가 en이 아닌 다른 언어인 경우 대비)
   const storedLocale = getLocale();
-  
+
+  // 4. 기본 언어 (en)
   return storedLocale;
 }
 

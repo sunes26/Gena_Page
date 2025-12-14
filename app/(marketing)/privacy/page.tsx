@@ -161,7 +161,7 @@ export default function PrivacyPolicyPage() {
                   <section id="article-1" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제1조(목적)</h2>
                     <p>
-                      OCEANCODE(이하 '회사'라고 함)는 회사가 제공하고자 하는 서비스(이하 '회사 서비스')를 이용하는 개인(이하 '이용자' 또는 '개인')의 정보(이하 '개인정보')를 보호하기 위해, 개인정보보호법, 정보통신망 이용촉진 및 정보보호 등에 관한 법률(이하 '정보통신망법') 등 관련 법령을 준수하고, 서비스 이용자의 개인정보 보호 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보처리방침(이하 '본 방침')을 수립합니다.
+                      OCEANCODE(이하 &apos;회사&apos;라고 함)는 회사가 제공하고자 하는 서비스(이하 &apos;회사 서비스&apos;)를 이용하는 개인(이하 &apos;이용자&apos; 또는 &apos;개인&apos;)의 정보(이하 &apos;개인정보&apos;)를 보호하기 위해, 개인정보보호법, 정보통신망 이용촉진 및 정보보호 등에 관한 법률(이하 &apos;정보통신망법&apos;) 등 관련 법령을 준수하고, 서비스 이용자의 개인정보 보호 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보처리방침(이하 &apos;본 방침&apos;)을 수립합니다.
                     </p>
                   </section>
 
@@ -350,7 +350,7 @@ export default function PrivacyPolicyPage() {
                   {/* Article 19 */}
                   <section id="article-19" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제19조(개인정보 유출 등에 대한 조치)</h2>
-                    <p>회사는 개인정보의 분실·도난·유출(이하 '유출 등'이라 한다) 사실을 안 때에는 지체 없이 다음 각 호의 모든 사항을 해당 이용자에게 알리고 방송통신위원회 또는 한국인터넷진흥원에 신고합니다.</p>
+                    <p>회사는 개인정보의 분실·도난·유출(이하 &apos;유출 등&apos;이라 한다) 사실을 안 때에는 지체 없이 다음 각 호의 모든 사항을 해당 이용자에게 알리고 방송통신위원회 또는 한국인터넷진흥원에 신고합니다.</p>
                     <ol className="list-decimal pl-6 space-y-2">
                       <li>유출 등이 된 개인정보 항목</li>
                       <li>유출 등이 발생한 시점</li>
@@ -370,7 +370,7 @@ export default function PrivacyPolicyPage() {
                   <section id="article-21" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제21조(개인정보 자동 수집 장치의 설치·운영 및 거부에 관한 사항)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>회사는 이용자에게 개별적인 맞춤서비스를 제공하기 위해 이용 정보를 저장하고 수시로 불러오는 개인정보 자동 수집장치(이하 '쿠키')를 사용합니다.</li>
+                      <li>회사는 이용자에게 개별적인 맞춤서비스를 제공하기 위해 이용 정보를 저장하고 수시로 불러오는 개인정보 자동 수집장치(이하 &apos;쿠키&apos;)를 사용합니다.</li>
                       <li>이용자는 쿠키 설치에 대한 선택권을 가지고 있습니다. 따라서 이용자는 웹브라우저에서 옵션을 설정함으로써 모든 쿠키를 허용하거나, 쿠키가 저장될 때마다 확인을 거치거나, 아니면 모든 쿠키의 저장을 거부할 수도 있습니다.</li>
                       <li>다만, 쿠키의 저장을 거부할 경우에는 로그인이 필요한 회사의 일부 서비스는 이용에 어려움이 있을 수 있습니다.</li>
                     </ol>
@@ -439,7 +439,7 @@ export default function PrivacyPolicyPage() {
                   <section id="article-1" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 1 (Purpose)</h2>
                     <p>
-                      OCEANCODE (hereinafter referred to as "the Company") establishes this Privacy Policy (hereinafter referred to as "this Policy") to protect the personal information of individuals (hereinafter referred to as "Users" or "Individuals") who use the services provided by the Company (hereinafter referred to as "Company Services"), comply with relevant laws such as the Personal Information Protection Act and the Act on Promotion of Information and Communications Network Utilization and Information Protection, etc., and promptly and smoothly handle complaints related to users' personal information protection.
+                      OCEANCODE (hereinafter referred to as &quot;the Company&quot;) establishes this Privacy Policy (hereinafter referred to as &quot;this Policy&quot;) to protect the personal information of individuals (hereinafter referred to as &quot;Users&quot; or &quot;Individuals&quot;) who use the services provided by the Company (hereinafter referred to as &quot;Company Services&quot;), comply with relevant laws such as the Personal Information Protection Act and the Act on Promotion of Information and Communications Network Utilization and Information Protection, etc., and promptly and smoothly handle complaints related to users&apos; personal information protection.
                     </p>
                   </section>
 
@@ -447,7 +447,7 @@ export default function PrivacyPolicyPage() {
                   <section id="article-2" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 2 (Principles of Personal Information Processing)</h2>
                     <p>
-                      In accordance with personal information-related laws and this Policy, the Company may collect users' personal information, and the collected personal information may be provided to third parties only with the consent of the individual. However, the Company may provide users' collected personal information to third parties without prior consent when legally compelled by laws and regulations.
+                      In accordance with personal information-related laws and this Policy, the Company may collect users&apos; personal information, and the collected personal information may be provided to third parties only with the consent of the individual. However, the Company may provide users&apos; collected personal information to third parties without prior consent when legally compelled by laws and regulations.
                     </p>
                   </section>
 
@@ -455,7 +455,7 @@ export default function PrivacyPolicyPage() {
                   <section id="article-3" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 3 (Disclosure of Policy)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>The Company discloses this Policy through the homepage's main page or a linked page so that users can easily check this Policy at any time.</li>
+                      <li>The Company discloses this Policy through the homepage&apos;s main page or a linked page so that users can easily check this Policy at any time.</li>
                       <li>When disclosing this Policy in accordance with Paragraph 1, the Company uses font size, color, etc. to enable users to easily check this Policy.</li>
                     </ol>
                   </section>
@@ -467,7 +467,7 @@ export default function PrivacyPolicyPage() {
                       <li>This Policy may be revised in accordance with changes to personal information-related laws, guidelines, notices, or government or Company service policies or content.</li>
                       <li>When revising this Policy pursuant to Paragraph 1, the Company shall notify by one or more of the following methods:
                         <ul className="list-disc pl-6 mt-2">
-                          <li>Notification through the notice section of the Company's website main page or a separate window</li>
+                          <li>Notification through the notice section of the Company&apos;s website main page or a separate window</li>
                           <li>Notification to users by mail, facsimile, email, or similar methods</li>
                         </ul>
                       </li>
@@ -478,7 +478,7 @@ export default function PrivacyPolicyPage() {
                   {/* Article 5 */}
                   <section id="article-5" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 5 (Information for Membership Registration)</h2>
-                    <p>The Company collects the following information for users' membership registration for Company services.</p>
+                    <p>The Company collects the following information for users&apos; membership registration for Company services.</p>
                     <ul className="list-disc pl-6 mt-2">
                       <li><strong>Required Information:</strong> Email address, password, name and nickname</li>
                     </ul>
@@ -523,9 +523,9 @@ export default function PrivacyPolicyPage() {
                   {/* Article 10 */}
                   <section id="article-10" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 10 (Methods of Personal Information Collection)</h2>
-                    <p>The Company collects users' personal information through the following methods:</p>
+                    <p>The Company collects users&apos; personal information through the following methods:</p>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>Users entering their personal information on the Company's website</li>
+                      <li>Users entering their personal information on the Company&apos;s website</li>
                       <li>Users entering their personal information through services other than the homepage provided by the Company, such as applications</li>
                       <li>Users entering personal information upon receiving emails sent by the Company</li>
                       <li>Users entering information while using Company services such as customer service consultations and bulletin board activities</li>
@@ -550,7 +550,7 @@ export default function PrivacyPolicyPage() {
                   <section id="article-12" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 12 (Retention and Use Period of Personal Information)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>The Company retains and uses users' personal information for the period necessary to achieve the purpose of collection and use of personal information.</li>
+                      <li>The Company retains and uses users&apos; personal information for the period necessary to achieve the purpose of collection and use of personal information.</li>
                       <li>Notwithstanding the preceding paragraph, the Company retains fraudulent service use records for up to 1 year from the time of membership withdrawal to prevent fraudulent registration and use in accordance with internal policies.</li>
                     </ol>
                   </section>
@@ -609,7 +609,7 @@ export default function PrivacyPolicyPage() {
                   <section id="article-17" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 17 (Measures for Advertising Information Transmission)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
-                      <li>When transmitting commercial advertising information using electronic transmission media, the Company obtains users' explicit prior consent.</li>
+                      <li>When transmitting commercial advertising information using electronic transmission media, the Company obtains users&apos; explicit prior consent.</li>
                       <li>Notwithstanding the preceding paragraph, the Company does not transmit commercial advertising information when recipients express refusal or withdraw prior consent, and notifies the processing results of refusal and consent withdrawal.</li>
                       <li>When transmitting commercial advertising information using electronic transmission media between 9 PM and 8 AM the next day, the Company obtains separate prior consent from recipients notwithstanding Paragraph 1.</li>
                     </ol>
@@ -620,7 +620,7 @@ export default function PrivacyPolicyPage() {
                     <h2 className="text-2xl font-bold mb-4">Article 18 (User Obligations)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
                       <li>Users must maintain their personal information in an up-to-date state, and users are responsible for problems arising from inaccurate information input.</li>
-                      <li>In case of membership registration using another person's personal information, users may lose their qualifications or be punished in accordance with relevant personal information protection laws.</li>
+                      <li>In case of membership registration using another person&apos;s personal information, users may lose their qualifications or be punished in accordance with relevant personal information protection laws.</li>
                       <li>Users are responsible for maintaining security of their email addresses, passwords, etc., and cannot transfer or lend them to third parties.</li>
                     </ol>
                   </section>
@@ -641,7 +641,7 @@ export default function PrivacyPolicyPage() {
                   {/* Article 20 */}
                   <section id="article-20" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 20 (Exceptions to Leakage Measures)</h2>
-                    <p>Notwithstanding the preceding article, when there are legitimate reasons such as inability to know users' contact information, the Company may take measures to substitute the notification in the preceding article by posting it on the Company's website for 30 days or more.</p>
+                    <p>Notwithstanding the preceding article, when there are legitimate reasons such as inability to know users&apos; contact information, the Company may take measures to substitute the notification in the preceding article by posting it on the Company&apos;s website for 30 days or more.</p>
                   </section>
 
                   {/* Article 21 */}
@@ -668,7 +668,7 @@ export default function PrivacyPolicyPage() {
                   {/* Article 23 */}
                   <section id="article-23" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 23 (Privacy Officer Designation)</h2>
-                    <p>The Company designates relevant departments and privacy officers as follows to protect users' personal information and handle complaints related to personal information.</p>
+                    <p>The Company designates relevant departments and privacy officers as follows to protect users&apos; personal information and handle complaints related to personal information.</p>
                     
                     <div className="bg-blue-50 p-6 rounded-lg mt-4">
                       <h3 className="text-lg font-semibold mb-3">{t('legal.privacy.contact.title')}</h3>
@@ -689,7 +689,7 @@ export default function PrivacyPolicyPage() {
                     <ul className="list-disc pl-6 space-y-2 mt-4">
                       <li><strong>Personal Information Dispute Mediation Committee:</strong> 1833-6972 (www.kopico.go.kr)</li>
                       <li><strong>Personal Information Infringement Report Center:</strong> 118 (privacy.kisa.or.kr)</li>
-                      <li><strong>Supreme Prosecutors' Office:</strong> 1301 (www.spo.go.kr)</li>
+                      <li><strong>Supreme Prosecutors&apos; Office:</strong> 1301 (www.spo.go.kr)</li>
                       <li><strong>Korean National Police Agency:</strong> 182 (ecrm.cyber.go.kr)</li>
                     </ul>
 

@@ -12,19 +12,26 @@ interface AdminConfig {
 
 /**
  * 환경 변수에서 Admin SDK 설정 가져오기
+ * FIREBASE_* 또는 FIREBASE_ADMIN_* 둘 다 지원
  */
 const getAdminConfig = (): AdminConfig => {
-  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  // 두 가지 형식 모두 지원 (FIREBASE_* 우선, FIREBASE_ADMIN_* 대체)
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
       'Missing Firebase Admin SDK credentials.\n' +
-      'Required environment variables:\n' +
-      '- FIREBASE_ADMIN_PROJECT_ID\n' +
-      '- FIREBASE_ADMIN_CLIENT_EMAIL\n' +
-      '- FIREBASE_ADMIN_PRIVATE_KEY'
+      'Required environment variables (use either format):\n' +
+      '  Option 1:\n' +
+      '  - FIREBASE_PROJECT_ID\n' +
+      '  - FIREBASE_CLIENT_EMAIL\n' +
+      '  - FIREBASE_PRIVATE_KEY\n' +
+      '  Option 2:\n' +
+      '  - FIREBASE_ADMIN_PROJECT_ID\n' +
+      '  - FIREBASE_ADMIN_CLIENT_EMAIL\n' +
+      '  - FIREBASE_ADMIN_PRIVATE_KEY'
     );
   }
 
@@ -141,8 +148,10 @@ export const getSubscriptionCollection = () => {
 export { adminApp, adminAuth, adminDb };
 
 // 기본 export
-export default {
+const firebaseAdmin = {
   app: initializeAdmin,
   auth: getAdminAuth,
   db: getAdminFirestore,
 };
+
+export default firebaseAdmin;

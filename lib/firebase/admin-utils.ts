@@ -1,6 +1,7 @@
 // lib/firebase/admin-utils.ts
 import { getAdminAuth, getAdminFirestore } from './admin';
 import { DecodedIdToken } from 'firebase-admin/auth';
+import { timestampToDate } from './utils';
 
 /**
  * Firebase ID 토큰 검증
@@ -30,22 +31,13 @@ export async function userExists(userId: string): Promise<boolean> {
     const auth = getAdminAuth();
     await auth.getUser(userId);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
 
-/**
- * Firestore Timestamp를 Date로 변환
- */
-export function timestampToDate(timestamp: any): Date {
-  if (!timestamp) return new Date();
-  if (timestamp.toDate) return timestamp.toDate();
-  if (timestamp._seconds) {
-    return new Date(timestamp._seconds * 1000);
-  }
-  return new Date(timestamp);
-}
+// ✅ timestampToDate는 utils.ts에서 import하여 사용
+export { timestampToDate };
 
 /**
  * 배치 삭제 (소프트 삭제)

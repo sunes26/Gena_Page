@@ -2,13 +2,13 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { Menu, X, Sparkles, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { logout } from '@/lib/auth';
 import { useTranslation } from '@/hooks/useTranslation'; // ✅ 번역 훅 추가
-import LanguageSwitcher from '@/components/LanguageSwitcher'; // ✅ 언어 전환 버튼 추가
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -67,9 +67,11 @@ export default function Header() {
                 <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-700">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
                     {user.photoURL ? (
-                      <img
+                      <Image
                         src={user.photoURL}
                         alt={user.displayName || t('common.name')}
+                        width={32}
+                        height={32}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -109,9 +111,6 @@ export default function Header() {
                 </Link>
               </>
             )}
-
-            {/* ✅ 언어 전환 버튼 추가 */}
-            <LanguageSwitcher showLabel={false} />
           </div>
 
           {/* 모바일 메뉴 버튼 */}
@@ -161,11 +160,6 @@ export default function Header() {
                 {t('marketing.header.faq')}
               </a>
 
-              {/* ✅ 모바일 언어 전환 버튼 */}
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                <LanguageSwitcher className="w-full justify-center" />
-              </div>
-
               <div className="flex flex-col gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
                 {loading ? (
                   <div className="w-full h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></div>
@@ -176,9 +170,11 @@ export default function Header() {
                     <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
                         {user.photoURL ? (
-                          <img
+                          <Image
                             src={user.photoURL}
                             alt={user.displayName || t('common.name')}
+                            width={40}
+                            height={40}
                             className="w-full h-full object-cover"
                           />
                         ) : (

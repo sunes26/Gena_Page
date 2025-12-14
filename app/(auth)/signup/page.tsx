@@ -84,11 +84,11 @@ export default function SignupPage() {
       await createUserProfile(userId, email, displayName);
 
       router.push('/verify-email?email=' + encodeURIComponent(email));
-    } catch (error: any) {
+    } catch (error) {
       console.error('Signup error:', error);
-      const errorMessage = error.code
+      const errorMessage = error && typeof error === 'object' && 'code' in error
         ? translateAuthError(error, t)
-        : error.message || t('auth.errors.signupFailed');
+        : (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : t('auth.errors.signupFailed'));
       setError(errorMessage);
     } finally {
       setLoading(false);

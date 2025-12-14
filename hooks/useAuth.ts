@@ -4,7 +4,7 @@
 /**
  * ✅ AuthContext를 사용하는 것을 권장
  * 이 파일은 하위 호환성을 위해 유지
- * 
+ *
  * AuthContext에서 제공하는 기능:
  * - user: Firebase Auth User
  * - userProfile: Firestore users 컬렉션 데이터
@@ -14,17 +14,19 @@
  * - error: 에러 상태
  */
 
-export { 
-  useAuth, 
-  useAuthContext, 
-  type UserProfile 
+import { useAuth as useAuthContext } from '@/contexts/AuthContext';
+
+export {
+  useAuth,
+  useAuthContext,
+  type UserProfile
 } from '@/contexts/AuthContext';
 
 /**
  * 사용자 로그인 여부만 확인하는 간단한 훅
- * 
+ *
  * @returns boolean - 로그인 여부
- * 
+ *
  * @example
  * const isLoggedIn = useIsAuthenticated();
  * if (isLoggedIn) {
@@ -32,16 +34,15 @@ export {
  * }
  */
 export function useIsAuthenticated(): boolean {
-  const { useAuth } = require('@/contexts/AuthContext');
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthContext();
   return !loading && user !== null;
 }
 
 /**
  * 현재 사용자 ID를 반환하는 훅
- * 
+ *
  * @returns string | null - 사용자 ID (로그아웃 시 null)
- * 
+ *
  * @example
  * const userId = useUserId();
  * if (userId) {
@@ -49,16 +50,15 @@ export function useIsAuthenticated(): boolean {
  * }
  */
 export function useUserId(): string | null {
-  const { useAuth } = require('@/contexts/AuthContext');
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   return user?.uid || null;
 }
 
 /**
  * 사용자가 Pro 플랜인지 확인하는 훅
- * 
+ *
  * @returns boolean - Pro 플랜 여부
- * 
+ *
  * @example
  * const isPro = useIsPremium();
  * if (isPro) {
@@ -66,16 +66,15 @@ export function useUserId(): string | null {
  * }
  */
 export function useIsPremium(): boolean {
-  const { useAuth } = require('@/contexts/AuthContext');
-  const { isPremium } = useAuth();
+  const { isPremium } = useAuthContext();
   return isPremium;
 }
 
 /**
  * 구독 플랜을 반환하는 훅
- * 
+ *
  * @returns 'free' | 'pro' - 구독 플랜
- * 
+ *
  * @example
  * const plan = useSubscriptionPlan();
  * if (plan === 'pro') {
@@ -83,7 +82,6 @@ export function useIsPremium(): boolean {
  * }
  */
 export function useSubscriptionPlan(): 'free' | 'pro' {
-  const { useAuth } = require('@/contexts/AuthContext');
-  const { subscriptionPlan } = useAuth();
+  const { subscriptionPlan } = useAuthContext();
   return subscriptionPlan;
 }

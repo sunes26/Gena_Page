@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+// ✅ Validate environment variables at build time
+import './lib/env';
+
 const nextConfig: NextConfig = {
   /* ========================================
    * 이미지 최적화 설정
@@ -52,7 +55,7 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-tabs',
     ],
-    
+
     // 서버 액션 최적화
     serverActions: {
       bodySizeLimit: '2mb',
@@ -185,9 +188,9 @@ const nextConfig: NextConfig = {
   /* ========================================
    * 추가 설정
    * ======================================== */
-  // 빌드 시 ESLint 무시 (선택사항)
+  // ✅ 빌드 시 ESLint 체크 활성화 (코드 품질 향상)
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // 빌드 시 TypeScript 에러 무시 안 함

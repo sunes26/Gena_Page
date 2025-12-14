@@ -41,7 +41,7 @@ function VerifyEmailContent() {
       await sendEmailVerification(user);
       setResendSuccess(true);
       setCountdown(60);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Resend email error:', error);
       setResendError('이메일 재발송에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {

@@ -14,7 +14,7 @@ interface SecuritySettingsProps {
   onUpdate: () => void;
 }
 
-export default function SecuritySettings({ user, onUpdate }: SecuritySettingsProps) {
+export default function SecuritySettings({}: SecuritySettingsProps) {
   const { t, locale } = useTranslation();
 
   // 비밀번호 변경
@@ -33,12 +33,12 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
     e.preventDefault();
 
     if (!currentPassword) {
-      showError(locale === 'ko' ? '현재 비밀번호를 입력해주세요.' : 'Please enter your current password.');
+      showError('현재 비밀번호를 입력해주세요.');
       return;
     }
 
     if (!newPassword) {
-      showError(locale === 'ko' ? '새 비밀번호를 입력해주세요.' : 'Please enter a new password.');
+      showError('새 비밀번호를 입력해주세요.');
       return;
     }
 
@@ -53,9 +53,7 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
     }
 
     if (currentPassword === newPassword) {
-      showError(locale === 'ko' 
-        ? '현재 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.' 
-        : 'New password must be different from current password.');
+      showError('현재 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.');
       return;
     }
 
@@ -69,7 +67,7 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password change error:', error);
       // ✅ 에러 메시지 번역 적용
       const errorMessage = translateAuthError(error, t);
@@ -90,9 +88,7 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{t('settings.security.changePassword')}</h3>
             <p className="text-sm text-gray-500">
-              {locale === 'ko' 
-                ? '계정 보안을 위해 주기적으로 비밀번호를 변경하세요.' 
-                : 'Update your password regularly for better security.'}
+              계정 보안을 위해 주기적으로 비밀번호를 변경하세요.
             </p>
           </div>
         </div>
@@ -132,7 +128,7 @@ export default function SecuritySettings({ user, onUpdate }: SecuritySettingsPro
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={locale === 'ko' ? '새 비밀번호 (최소 6자)' : 'New password (min 6 chars)'}
+                placeholder="새 비밀번호 (최소 6자)"
                 className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={passwordLoading}
               />

@@ -9,7 +9,7 @@ interface OnboardingGuideProps {
 }
 
 export default function OnboardingGuide({ isPremium = false }: OnboardingGuideProps) {
-  const { t, locale } = useTranslation();
+  const { locale } = useTranslation();
 
   const steps = [
     {

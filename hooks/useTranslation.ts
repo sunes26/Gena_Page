@@ -78,16 +78,16 @@ export type TranslationKey =
  */
 export function getStaticTranslation(locale: Locale, key: string): string {
   try {
-    const translations = locale === 'ko' 
+    const translations = locale === 'ko'
       ? require('@/messages/ko.json')
       : require('@/messages/en.json');
 
     const keys = key.split('.');
-    let value: any = translations;
+    let value: unknown = translations;
 
     for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
-        value = value[k];
+      if (value && typeof value === 'object' && value !== null && k in value) {
+        value = (value as Record<string, unknown>)[k];
       } else {
         return key;
       }

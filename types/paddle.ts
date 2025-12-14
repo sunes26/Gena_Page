@@ -33,7 +33,7 @@ export interface PaddleSubscription {
   customer_id: string;
   address_id: string | null;
   business_id: string | null;
-  custom_data: Record<string, any>;
+  custom_data: Record<string, unknown>;
   currency_code: string;
   created_at: string;
   updated_at: string;
@@ -42,7 +42,7 @@ export interface PaddleSubscription {
   next_billed_at: string | null;
   paused_at: string | null;
   canceled_at: string | null;
-  discount: any | null;
+  discount: unknown;
   collection_mode: 'automatic' | 'manual';
   billing_details: {
     enable_checkout: boolean;
@@ -93,7 +93,7 @@ export interface PaddleTransaction {
   customer_id: string | null;
   address_id: string | null;
   business_id: string | null;
-  custom_data: Record<string, any>;
+  custom_data: Record<string, unknown>;
   currency_code: string;
   origin: 'api' | 'subscription_charge' | 'subscription_payment_method_change';
   subscription_id: string | null;
@@ -101,7 +101,7 @@ export interface PaddleTransaction {
   invoice_number: string | null;
   collection_mode: 'automatic' | 'manual';
   discount_id: string | null;
-  billing_details: any;
+  billing_details: unknown;
   billing_period: {
     starts_at: string;
     ends_at: string;
@@ -109,7 +109,7 @@ export interface PaddleTransaction {
   items: Array<{
     price_id: string;
     quantity: number;
-    proration: any | null;
+    proration: unknown;
   }>;
   details: {
     totals: {
@@ -133,7 +133,7 @@ export interface PaddleTransaction {
       earnings: string;
       currency_code: string;
     };
-    payout_totals: any | null;
+    payout_totals: unknown;
     tax_rates_used: Array<{
       tax_rate: string;
       totals: {
@@ -147,7 +147,7 @@ export interface PaddleTransaction {
       id: string;
       price_id: string;
       quantity: number;
-      proration: any | null;
+      proration: unknown;
       tax_rate: string;
       unit_totals: {
         subtotal: string;
@@ -167,12 +167,12 @@ export interface PaddleTransaction {
         description: string;
         tax_category: string;
         image_url: string;
-        custom_data: Record<string, any>;
+        custom_data: Record<string, unknown>;
         status: 'active' | 'archived';
       };
     }>;
   };
-  payments: Array<any>;
+  payments: Array<unknown>;
   checkout: {
     url: string | null;
   };
@@ -189,11 +189,11 @@ export interface PaddleCustomer {
   name: string | null;
   email: string;
   status: 'active' | 'archived';
-  custom_data: Record<string, any>;
+  custom_data: Record<string, unknown>;
   locale: string;
   created_at: string;
   updated_at: string;
-  import_meta: any | null;
+  import_meta: unknown;
 }
 
 /**
@@ -218,14 +218,14 @@ export interface PaddlePrice {
     amount: string;
     currency_code: string;
   };
-  unit_price_overrides: Array<any>;
+  unit_price_overrides: Array<unknown>;
   quantity: {
     minimum: number;
     maximum: number;
   };
   status: 'active' | 'archived';
-  custom_data: Record<string, any>;
-  import_meta: any | null;
+  custom_data: Record<string, unknown>;
+  import_meta: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -238,7 +238,7 @@ export interface PaddleWebhookEvent {
   event_type: string;
   occurred_at: string;
   notification_id: string;
-  data: any;
+  data: unknown;
 }
 
 /**
@@ -289,7 +289,7 @@ export interface FirestoreSubscription {
   canceledAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  customData?: Record<string, any>;
+  customData?: Record<string, unknown>;
 }
 
 /**
