@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
       // Check if we have a cached result
       const cachedResult = await getIdempotencyResult(idempotencyKey);
       if (cachedResult) {
-        console.log(`✅ Returning cached result for duplicate resume request`);
         return Response.json(cachedResult);
       }
 
@@ -110,12 +109,6 @@ export async function POST(request: NextRequest) {
       return internalServerErrorResponse('구독 정보가 올바르지 않습니다.');
     }
 
-    console.log(`🔍 Subscription status check:`, {
-      paddleSubscriptionId,
-      status: subscriptionData.status,
-      cancelAtPeriodEnd: subscriptionData.cancelAtPeriodEnd,
-    });
-
     // 3. 이미 활성 상태이고 취소 예정이 아닌 경우
     if (!subscriptionData.cancelAtPeriodEnd && subscriptionData.status !== 'paused') {
       return businessLogicErrorResponse(
@@ -136,11 +129,9 @@ export async function POST(request: NextRequest) {
     try {
       if (subscriptionData.status === 'paused') {
         // paused 상태: resume API 호출
-        console.log(`⏯️ Resuming paused subscription: ${paddleSubscriptionId}`);
         updatedSubscription = await resumePaddleSubscription(paddleSubscriptionId);
       } else if (subscriptionData.cancelAtPeriodEnd) {
         // 취소 예정 상태: scheduled_change 취소
-        console.log(`🔄 Canceling scheduled cancellation: ${paddleSubscriptionId}`);
         updatedSubscription = await cancelScheduledChange(paddleSubscriptionId);
       } else {
         // 그 외의 경우: 현재 상태 조회
@@ -161,8 +152,6 @@ export async function POST(request: NextRequest) {
       canceledAt: null,
       updatedAt: Timestamp.now(),
     });
-
-    console.log(`✅ Subscription resumed successfully: ${paddleSubscriptionId}`);
 
     // ✅ Audit logging
     const resumeType = subscriptionData.status === 'paused'

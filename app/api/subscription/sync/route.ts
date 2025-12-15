@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
       // Check if we have a cached result
       const cachedResult = await getIdempotencyResult(idempotencyKey);
       if (cachedResult) {
-        console.log(`✅ Returning cached result for duplicate sync request`);
         return NextResponse.json(cachedResult);
       }
 
@@ -118,8 +117,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log(`🔄 Manual sync requested for user ${userId}, subscription ${paddleSubscriptionId}`);
 
     // 3. Paddle API에서 최신 구독 정보 가져오기
     let paddleSubscription;
@@ -198,7 +195,6 @@ export async function POST(request: NextRequest) {
         });
 
         await batch.commit();
-        console.log(`✅ Updated ${chunk.length} daily docs (sync)`);
       }
     }
 
@@ -207,11 +203,6 @@ export async function POST(request: NextRequest) {
       (new Date(paddleSubscription.current_billing_period.ends_at).getTime() - new Date().getTime()) / 
       (1000 * 60 * 60 * 24)
     );
-
-    console.log(`✅ Subscription synced successfully for user ${userId}`);
-    console.log(`   Status: ${paddleSubscription.status}`);
-    console.log(`   Current Period End: ${paddleSubscription.current_billing_period.ends_at}`);
-    console.log(`   Days until renewal: ${daysUntilRenewal}`);
 
     const responseData = {
       success: true,

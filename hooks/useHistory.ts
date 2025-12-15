@@ -218,28 +218,22 @@ export function useHistoryCount(userId: string | null) {
     userId ? ['history-count', userId] : null,
     async () => {
       if (!userId) {
-        console.log('⚠️ useHistoryCount: userId is null');
         return 0;
       }
 
       try {
-        console.log('🔍 Counting history documents for:', userId);
-        
         const db = getFirestoreInstance();
         const historyRef = collection(db, 'users', userId, 'history');
 
         // ✅ 간단한 쿼리 (where 조건 제거)
         const snapshot = await getDocs(historyRef);
-        
-        console.log(`📊 Total documents: ${snapshot.size}`);
-        
+
         // ✅ 클라이언트 사이드에서 deletedAt 필터링
         const validDocs = snapshot.docs.filter(
           (doc) => !doc.data().deletedAt
         );
 
         const count = validDocs.length;
-        console.log(`✅ Valid history count: ${count}`);
 
         return count;
       } catch (err) {

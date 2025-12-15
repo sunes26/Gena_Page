@@ -24,7 +24,6 @@ const PADDLE_CLIENT_TOKEN = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '';
  */
 export function getPaddleInstance(): Paddle | undefined {
   if (typeof window === 'undefined') {
-    console.warn('⚠️ getPaddleInstance: 서버 사이드에서 호출됨');
     return undefined;
   }
 
@@ -32,7 +31,6 @@ export function getPaddleInstance(): Paddle | undefined {
   const paddle = windowWithPaddle.Paddle;
 
   if (!paddle) {
-    console.warn('⚠️ getPaddleInstance: Paddle이 초기화되지 않음');
     return undefined;
   }
 
@@ -120,15 +118,6 @@ export async function openCheckout(options: OpenCheckoutOptions): Promise<void> 
       throw new Error('Paddle이 초기화되지 않았습니다. PaddleProvider가 올바르게 설정되었는지 확인하세요.');
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🛒 체크아웃 열기:', {
-        priceId,
-        userId,
-        userEmail,
-        environment: PADDLE_ENVIRONMENT,
-      });
-    }
-
     // 체크아웃 설정
     const checkoutOptions: CheckoutOpenOptions = {
       items: [
@@ -160,10 +149,6 @@ export async function openCheckout(options: OpenCheckoutOptions): Promise<void> 
 
     // 체크아웃 열기
     paddle.Checkout.open(checkoutOptions);
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Paddle 체크아웃 열림');
-    }
   } catch (error) {
     console.error('❌ 체크아웃 열기 실패:', error);
     throw new Error(
@@ -224,12 +209,8 @@ export async function cancelSubscription(subscriptionId: string): Promise<boolea
       throw new Error(error.error || '구독 취소에 실패했습니다.');
     }
 
-    const data = await response.json();
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ 구독 취소됨:', data);
-    }
-    
+    await response.json();
+
     return true;
   } catch (error) {
     console.error('❌ 구독 취소 실패:', error);
@@ -302,10 +283,6 @@ export async function resumeSubscription(subscriptionId: string): Promise<boolea
       throw new Error(error.error || '구독 재개에 실패했습니다.');
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ 구독 재개됨');
-    }
-    
     return true;
   } catch (error) {
     console.error('❌ 구독 재개 실패:', error);
@@ -333,18 +310,10 @@ export function isSandboxMode(): boolean {
 export function logPaddleDebugInfo(): void {
   if (process.env.NODE_ENV !== 'development') return;
 
-  console.group('🔍 Paddle Debug Info');
-  console.log('Environment:', PADDLE_ENVIRONMENT);
-  console.log('Client Token:', PADDLE_CLIENT_TOKEN ? `${PADDLE_CLIENT_TOKEN.substring(0, 20)}...` : 'NOT SET');
-  console.log('Price ID (Pro Monthly):', PADDLE_PRICES.pro_monthly || 'NOT SET');
-  console.log('Paddle Ready:', isPaddleReady());
-  
   const validation = validatePaddleConfig();
-  console.log('Config Valid:', validation.valid);
   if (!validation.valid) {
-    console.log('Config Errors:', validation.errors);
+    console.error('Paddle Config Errors:', validation.errors);
   }
-  console.groupEnd();
 }
 
 // 기본 export

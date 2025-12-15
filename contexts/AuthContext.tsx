@@ -76,7 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (authUser) {
             try {
               // ✅ 1. 사용자 프로필 생성 (없을 경우에만)
-              console.log('🔄 Ensuring user profile for:', authUser.uid);
               await ensureUserProfile(
                 authUser.uid,
                 authUser.email!,
@@ -94,7 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const data = docSnapshot.data() as UserProfile;
                     setUserProfile(data);
                     setError(null);
-                    console.log('✅ User profile loaded:', authUser.uid);
                   } else {
                     // ⚠️ 프로필 생성 직후에는 이 분기가 실행될 수 있음
                     console.warn('⚠️ User profile not found immediately after creation');

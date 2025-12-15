@@ -42,9 +42,6 @@ export async function tryClaimIdempotencyKey(
 
       // Key already exists - this is a duplicate request
       if (keyDoc.exists) {
-        const data = keyDoc.data() as IdempotencyKeyData;
-        console.log(`⚠️ Duplicate request detected: ${operation} for user ${userId}`);
-        console.log(`   Original request at: ${data.createdAt.toDate().toISOString()}`);
         return false;
       }
 
@@ -64,10 +61,6 @@ export async function tryClaimIdempotencyKey(
 
       return true;
     });
-
-    if (claimed) {
-      console.log(`✅ Idempotency key claimed: ${key} for ${operation}`);
-    }
 
     return claimed;
   } catch (error) {
@@ -94,7 +87,6 @@ export async function storeIdempotencyResult(
       result,
       updatedAt: Timestamp.now(),
     });
-    console.log(`✅ Stored idempotency result for key: ${key}`);
   } catch (error) {
     console.error('Error storing idempotency result:', error);
     // Non-critical, just log the error
@@ -148,7 +140,6 @@ export async function cleanupExpiredIdempotencyKeys(): Promise<number> {
     });
 
     await batch.commit();
-    console.log(`🗑️ Cleaned up ${expiredKeys.size} expired idempotency keys`);
     return expiredKeys.size;
   } catch (error) {
     console.error('Error cleaning up idempotency keys:', error);

@@ -52,8 +52,6 @@ async function paddleRequest<T>(
     delete requestOptions.body;
   }
 
-  console.log(`📡 Paddle API Request: ${options.method || 'GET'} ${endpoint}`);
-
   const response = await fetch(url, requestOptions);
 
   if (!response.ok) {
@@ -238,8 +236,6 @@ export async function resumePaddleSubscription(
 export async function cancelScheduledChange(
   subscriptionId: string
 ): Promise<PaddleSubscription> {
-  console.log(`🔄 Canceling scheduled change for subscription: ${subscriptionId}`);
-
   const response = await paddleRequest<{ data: PaddleSubscription }>(
     `/subscriptions/${subscriptionId}`,
     {
@@ -257,7 +253,6 @@ export async function cancelScheduledChange(
     'Cancel Scheduled Change Response'
   );
 
-  console.log(`✅ Scheduled change canceled for subscription: ${subscriptionId}`);
   return validatedResponse.data;
 }
 
@@ -297,8 +292,6 @@ export async function getUpdatePaymentMethodUrl(
 ): Promise<string> {
   const { subscriptionId } = options;
 
-  console.log(`🔄 Getting update payment method URL for: ${subscriptionId}`);
-
   // ✅ GET 요청 사용 (POST 아님!)
   const response = await paddleRequest<{
     data: {
@@ -319,7 +312,6 @@ export async function getUpdatePaymentMethodUrl(
     'Update Payment Method Response'
   );
 
-  console.log(`✅ Update payment URL generated`);
   return validatedResponse.data.checkout.url;
 }
 

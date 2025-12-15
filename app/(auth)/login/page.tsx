@@ -99,8 +99,6 @@ function LoginFormContent() {
       const userDoc = await getDoc(userRef);
 
       if (!userDoc.exists()) {
-        console.log('Creating user profile for existing user:', userId);
-        
         await setDoc(userRef, {
           email: userEmail,
           name: userName || null,
@@ -110,10 +108,6 @@ function LoginFormContent() {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
-
-        console.log('✅ User profile created (migration):', userId);
-      } else {
-        console.log('✅ User profile already exists:', userId);
       }
     } catch (error) {
       console.error('Failed to ensure user profile:', error);

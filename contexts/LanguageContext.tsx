@@ -47,7 +47,6 @@ export function LanguageProvider({ children, initialLocale }: LanguageProviderPr
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);
     saveLocale(newLocale);
-    console.log('Language changed to:', newLocale);
   };
 
   /**

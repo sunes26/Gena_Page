@@ -58,8 +58,6 @@ export default function SignupPage() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-
-      console.log('✅ User profile created:', userId);
     } catch (error) {
       console.error('Failed to create user profile:', error);
     }

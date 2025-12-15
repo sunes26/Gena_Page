@@ -17,8 +17,6 @@ import { applyRateLimit, getIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log('📝 Update payment method request received');
-
     // 1. Firebase ID 토큰 인증
     const authHeader = request.headers.get('authorization');
     
@@ -43,7 +41,6 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = decodedToken.uid;
-    console.log(`👤 User authenticated: ${userId}`);
 
     // Rate Limiting (사용자별)
     const identifier = getIdentifier(request, userId);
@@ -63,7 +60,6 @@ export async function POST(request: NextRequest) {
       .get();
 
     if (subscriptionsSnapshot.empty) {
-      console.log('❌ No active subscription found');
       return NextResponse.json(
         {
           error: 'No active subscription',
@@ -92,8 +88,6 @@ export async function POST(request: NextRequest) {
 
     const paddleSubscriptionId = subscriptionData.paddleSubscriptionId;
 
-    console.log(`📋 Subscription found: ${paddleSubscriptionId}`);
-
     if (!paddleSubscriptionId) {
       console.error('Missing paddleSubscriptionId:', subscriptionData);
       return NextResponse.json(
@@ -108,13 +102,9 @@ export async function POST(request: NextRequest) {
     // 3. Paddle API로 결제 수단 변경 URL 생성
     let updateUrl;
     try {
-      console.log(`🔄 Requesting update payment URL from Paddle...`);
-      
       updateUrl = await getUpdatePaymentMethodUrl({
         subscriptionId: paddleSubscriptionId,
       });
-      
-      console.log(`✅ Update payment URL generated: ${updateUrl.substring(0, 50)}...`);
     } catch (error) {
       console.error('Failed to get update URL:', error);
       return NextResponse.json(

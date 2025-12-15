@@ -344,8 +344,6 @@ export async function markEventAsProcessed(
       expiresAt: Timestamp.fromDate(expiresAt),
       ...(metadata && { metadata }),
     });
-
-    console.log(`✅ Event marked as processed: ${eventId}`);
   } catch (error) {
     console.error('Error marking event as processed:', error);
     throw error;
@@ -446,7 +444,6 @@ export async function cleanupOldWebhookEvents(): Promise<number> {
     });
     await batch.commit();
 
-    console.log(`🗑️  Cleaned up ${oldEventsSnapshot.size} old webhook events`);
     return oldEventsSnapshot.size;
   } catch (error) {
     console.error('Failed to cleanup old webhook events:', error);
@@ -617,8 +614,6 @@ export async function markWebhookFailureAsRetried(failureId: string): Promise<vo
       retryCount: (await failureRef.get()).data()?.retryCount + 1 || 1,
       lastRetryAt: Timestamp.now(),
     });
-
-    console.log(`✅ Webhook failure marked as retried: ${failureId}`);
   } catch (error) {
     console.error('Failed to mark webhook failure as retried:', error);
     throw error;
@@ -640,8 +635,6 @@ export async function markWebhookFailureAsResolved(
       resolvedAt: Timestamp.now(),
       ...(resolution && { resolution }),
     });
-
-    console.log(`✅ Webhook failure marked as resolved: ${failureId}`);
   } catch (error) {
     console.error('Failed to mark webhook failure as resolved:', error);
     throw error;

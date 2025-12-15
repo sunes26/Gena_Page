@@ -63,11 +63,7 @@ export async function ensureUserProfile(
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-
-      console.log('✅ User profile created:', userId);
     } else {
-      console.log('✅ User profile already exists:', userId);
-      
       // 3. 기존 문서가 있어도 일부 필드는 업데이트 (선택사항)
       // 예: displayName이나 photoURL이 변경되었을 수 있음
       const currentData = userDoc.data();
@@ -85,7 +81,6 @@ export async function ensureUserProfile(
           },
           { merge: true } // 기존 데이터 유지하면서 병합
         );
-        console.log('✅ User profile updated:', userId);
       }
     }
   } catch (error) {

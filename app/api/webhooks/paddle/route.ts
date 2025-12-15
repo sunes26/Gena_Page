@@ -134,12 +134,10 @@ async function tryMarkEventAsProcessed(
     });
 
     // Transaction 성공 = 처음 처리하는 이벤트
-    console.log(`✅ Event marked as processed: ${eventId}`);
     return true;
   } catch (error) {
     // Transaction 실패 = 이미 처리된 이벤트 (중복)
     if (error instanceof Error && error.message === 'Event already processed') {
-      console.log(`⚠️ Duplicate webhook ignored: ${eventId}`);
       return false;
     }
 
@@ -190,8 +188,6 @@ async function updateUserProfile(
       ...updates,
       updatedAt: Timestamp.now(),
     });
-    
-    console.log(`✅ User profile updated: ${userId}`, updates);
   } catch (error) {
     console.error('Failed to update user profile:', error);
     // 에러가 나도 계속 진행
@@ -231,13 +227,7 @@ async function updateDailyPremiumStatus(
       .get();
 
     if (dailySnapshot.empty) {
-      console.log(`No daily docs to update for user ${userId} (from ${startDate})`);
       return;
-    }
-
-    // ✅ 경고: 문서 수가 너무 많으면 로그
-    if (dailySnapshot.size >= 90) {
-      console.warn(`⚠️ Daily docs limit reached (${dailySnapshot.size}) for user ${userId}`);
     }
 
     // ✅ 최적화: Firestore 배치는 500개 제한
@@ -253,10 +243,7 @@ async function updateDailyPremiumStatus(
       });
 
       await batch.commit();
-      console.log(`✅ Updated ${chunk.length} daily docs (batch ${Math.floor(i / batchSize) + 1})`);
     }
-
-    console.log(`✅ Total updated: ${dailySnapshot.size} daily docs for user ${userId}`);
   } catch (error) {
     console.error('Failed to update daily stats:', error);
   }
@@ -269,8 +256,6 @@ async function syncSubscriptionFromPaddle(
   paddleSubscriptionId: string
 ): Promise<void> {
   try {
-    console.log(`🔄 Syncing subscription from Paddle: ${paddleSubscriptionId}`);
-    
     // Paddle API에서 최신 구독 정보 가져오기
     const paddleSubscription = await getPaddleSubscription(paddleSubscriptionId);
     
@@ -314,9 +299,6 @@ async function syncSubscriptionFromPaddle(
 
     await subscriptionDoc.ref.update(updateData);
 
-    console.log(`✅ Subscription synced from Paddle: ${paddleSubscriptionId}`);
-    console.log(`   Current Period End: ${paddleSubscription.current_billing_period.ends_at}`);
-
     // users 컬렉션도 업데이트
     if (paddleSubscription.status === 'active' || paddleSubscription.status === 'trialing') {
       await updateUserProfile(userId, {
@@ -353,8 +335,6 @@ async function handleSubscriptionCreated(data: unknown): Promise<void> {
     console.error('userId does not exist in Firestore:', userId);
     throw new Error('Invalid userId: user not found');
   }
-
-  console.log(`✅ userId validated: ${userId}`);
 
   // 1. subscription 컬렉션에 저장
   const subscriptionData = {
@@ -396,8 +376,6 @@ async function handleSubscriptionCreated(data: unknown): Promise<void> {
   }).catch((err) => {
     console.error('Failed to log audit trail:', err);
   });
-
-  console.log(`✅ Subscription created for user ${userId}`);
 }
 
 /**
@@ -492,10 +470,6 @@ async function handleSubscriptionUpdated(data: unknown): Promise<void> {
         console.error('Failed to log plan downgrade audit:', err);
       });
     }
-
-    console.log(`🔄 Plan ${changeType} detected: ${data.id}`);
-    console.log(`   Old Price: ${oldPrice} (${oldPriceId})`);
-    console.log(`   New Price: ${newPrice} (${newPriceId})`);
   }
 
   // ✅ Phase 3-1: Audit logging for subscription update (non-plan-change)
@@ -515,11 +489,6 @@ async function handleSubscriptionUpdated(data: unknown): Promise<void> {
   ).catch((err) => {
     console.error('Failed to log subscription update audit:', err);
   });
-
-  console.log(`✅ Subscription updated: ${data.id}`);
-  console.log(`   Status: ${data.status}`);
-  console.log(`   Current Period End: ${data.current_billing_period.ends_at}`);
-  console.log(`   Next Billing Date: ${data.next_billed_at}`);
 
   // 2. ✅ users 컬렉션 업데이트 (상태에 따라)
   if (data.status === 'active' || data.status === 'trialing') {
@@ -593,8 +562,6 @@ async function handleSubscriptionCanceled(data: unknown): Promise<void> {
   ).catch((err) => {
     console.error('Failed to log subscription canceled audit:', err);
   });
-
-  console.log(`✅ Subscription canceled: ${data.id}`);
 }
 
 /**
@@ -630,8 +597,6 @@ async function handleSubscriptionPastDue(data: unknown): Promise<void> {
   await updateUserProfile(userId, {
     isPremium: false,
   });
-
-  console.log(`✅ Subscription past_due: ${data.id}`);
 }
 
 /**
@@ -667,8 +632,6 @@ async function handleSubscriptionPaused(data: unknown): Promise<void> {
   await updateUserProfile(userId, {
     isPremium: false,
   });
-
-  console.log(`✅ Subscription paused: ${data.id}`);
 }
 
 /**
@@ -722,8 +685,6 @@ async function handleSubscriptionResumed(data: unknown): Promise<void> {
   ).catch((err) => {
     console.error('Failed to log subscription resumed audit:', err);
   });
-
-  console.log(`✅ Subscription resumed: ${data.id}`);
 }
 
 /**
@@ -749,8 +710,6 @@ async function handleTransactionCompleted(data: unknown): Promise<void> {
     console.error('userId does not exist in Firestore:', userId);
     throw new Error('Invalid userId: user not found');
   }
-
-  console.log(`✅ userId validated: ${userId}`);
 
   // 1. 결제 기록 저장
   const paymentData = {
@@ -782,14 +741,10 @@ async function handleTransactionCompleted(data: unknown): Promise<void> {
     console.error('Failed to log payment completed audit:', err);
   });
 
-  console.log(`✅ Transaction completed: ${data.id} for user ${userId}`);
-
   // 2. ✅ 구독 관련 결제인 경우 Paddle API에서 최신 구독 정보 동기화
   if (data.subscription_id) {
     try {
-      console.log(`🔄 Syncing subscription after payment: ${data.subscription_id}`);
       await syncSubscriptionFromPaddle(data.subscription_id);
-      console.log(`✅ Subscription synced successfully after payment`);
 
       // ✅ Phase 2-1: 구독 검증 - Firestore에 구독이 제대로 생성되었는지 확인
       const subscriptionSnapshot = await db
@@ -816,7 +771,6 @@ async function handleTransactionCompleted(data: unknown): Promise<void> {
         };
 
         await db.collection('payment_verifications').add(verificationData);
-        console.log(`✅ Payment verification successful: Subscription ${data.subscription_id} exists in Firestore`);
       } else {
         // 구독이 없음 - 경고 로그
         const verificationData = {
@@ -881,8 +835,6 @@ async function handleTransactionPaymentFailed(data: unknown): Promise<void> {
     throw new Error('Invalid userId: user not found');
   }
 
-  console.log(`✅ userId validated: ${userId}`);
-
   const paymentData = {
     userId,
     transactionId: data.id,
@@ -912,8 +864,6 @@ async function handleTransactionPaymentFailed(data: unknown): Promise<void> {
   ).catch((err) => {
     console.error('Failed to log payment failed audit:', err);
   });
-
-  console.log(`❌ Transaction payment failed: ${data.id} for user ${userId}`);
 }
 
 /**
@@ -938,8 +888,6 @@ async function handleTransactionRefunded(data: unknown): Promise<void> {
     console.error('userId does not exist in Firestore:', userId);
     throw new Error('Invalid userId: user not found');
   }
-
-  console.log(`✅ userId validated: ${userId}`);
 
   // 환불 기록 저장
   const refundData = {
@@ -982,9 +930,6 @@ async function handleTransactionRefunded(data: unknown): Promise<void> {
     console.error('Failed to log payment refunded audit:', err);
   });
 
-  console.log(`💰 Transaction refunded: ${data.id} for user ${userId}`);
-  console.log(`   Amount: ${refundData.amount} ${refundData.currency}`);
-
   // TODO: 사용자에게 환불 알림 이메일 발송 (선택사항)
 }
 
@@ -998,12 +943,6 @@ export async function POST(request: NextRequest) {
 
     const signatureHeader = request.headers.get('paddle-signature');
     const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
-
-    // 🔍 디버깅: 웹훅 요청 정보 로깅
-    console.log('📨 Paddle webhook received');
-    console.log('Signature header:', signatureHeader);
-    console.log('Body length:', rawBody.length);
-    console.log('Has webhook secret:', !!webhookSecret);
 
     if (!webhookSecret) {
       console.error('PADDLE_WEBHOOK_SECRET is not set');
@@ -1044,8 +983,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { event_id, event_type, data } = payload;
-
-    console.log(`📨 Paddle webhook received: ${event_type} (${event_id})`);
 
     // ✅ Transaction 기반 중복 처리 방지
     const canProcess = await tryMarkEventAsProcessed(event_id, event_type);
@@ -1099,7 +1036,8 @@ export async function POST(request: NextRequest) {
           break;
 
         default:
-          console.log(`ℹ️ Unhandled event type: ${event_type}`);
+          // Unhandled event type
+          break;
       }
 
       // ✅ 이미 tryMarkEventAsProcessed에서 저장됨 - markEventAsProcessed 호출 불필요

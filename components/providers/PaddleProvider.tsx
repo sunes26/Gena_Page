@@ -94,9 +94,6 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
       // ✅ Sandbox 환경 설정 (Setup 전에 호출해야 함)
       if (paddleEnv === 'sandbox' && paddle.Environment) {
         paddle.Environment.set('sandbox');
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🏖️ Paddle Sandbox 환경 설정됨');
-        }
       }
 
       // ✅ Paddle.js v2 초기화 옵션
@@ -104,20 +101,6 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
         token: paddleToken,
         // 이벤트 콜백
         eventCallback: (event: PaddleEvent) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🎫 Paddle Event:', event.name, event.data);
-          }
-
-          // 체크아웃 완료 이벤트
-          if (event.name === 'checkout.completed') {
-            console.log('✅ Checkout completed:', event.data);
-          }
-
-          // 체크아웃 닫힘 이벤트
-          if (event.name === 'checkout.closed') {
-            console.log('📦 Checkout closed');
-          }
-
           // 에러 이벤트
           if (event.name === 'checkout.error') {
             console.error('❌ Checkout error:', event.data);
@@ -127,14 +110,9 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
 
       // ✅ Paddle 초기화
       paddle.Setup(options);
-      
+
       setIsReady(true);
       setError(null);
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ Paddle 초기화 완료 (${paddleEnv} 모드)`);
-        console.log('📌 Token:', paddleToken.substring(0, 20) + '...');
-      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Paddle 초기화 실패';
       console.error('❌ Paddle 초기화 오류:', err);
@@ -182,9 +160,6 @@ export function PaddleProvider({ children }: { children: React.ReactNode }) {
         src="https://cdn.paddle.com/paddle/v2/paddle.js"
         strategy="afterInteractive"
         onLoad={() => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('✅ Paddle.js 스크립트 로드 완료');
-          }
           // 스크립트 로드 완료 후 초기화 시도
           setTimeout(initializePaddle, 100);
         }}

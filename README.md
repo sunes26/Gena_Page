@@ -2,7 +2,7 @@
 
 > AI 기반 웹페이지 요약 Chrome 확장 프로그램과 웹 대시보드를 제공하는 SaaS 플랫폼
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.9-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-10.0-orange)](https://firebase.google.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-38bdf8)](https://tailwindcss.com/)
@@ -47,7 +47,7 @@ AI 기반 웹페이지 요약 Chrome 확장 프로그램과 웹 대시보드를 
 ## 🛠 기술 스택
 
 ### Frontend
-- **Next.js 14** (App Router) - React 프레임워크
+- **Next.js 15.5.9** (App Router) - React 프레임워크
 - **TypeScript** - 타입 안정성
 - **Tailwind CSS** - 유틸리티 기반 스타일링
 - **Shadcn/ui** - UI 컴포넌트 라이브러리
@@ -72,6 +72,9 @@ AI 기반 웹페이지 요약 Chrome 확장 프로그램과 웹 대시보드를 
 - **OpenAI API** - AI 요약 엔진
 - **Vercel** - 호스팅 및 배포
 - **Resend** - 이메일 발송
+
+### 분석 & 모니터링
+- **Google Analytics 4** - 웹사이트 방문자 추적 및 분석
 
 ---
 
@@ -196,6 +199,9 @@ C:.
 │  │  LogoutButton.tsx               # 로그아웃 버튼
 │  │  UserProfile.tsx                # 사용자 프로필
 │  │
+│  ├─analytics                       # 분석 컴포넌트 ✅
+│  │      GoogleAnalytics.tsx       # Google Analytics 4
+│  │
 │  ├─dashboard                       # 대시보드 컴포넌트
 │  │      DomainFilter.tsx           # 도메인 필터
 │  │      EmailVerificationModal.tsx # 이메일 인증 모달
@@ -292,6 +298,7 @@ C:.
 │  │  globe.svg
 │  │  manifest.json                  # PWA 매니페스트
 │  │  next.svg
+│  │  og-image.png                   # Open Graph 이미지 (1200x630) ✅
 │  │  vercel.svg
 │  │  window.svg
 │  │
@@ -391,6 +398,12 @@ SESSION_MAX_AGE=604800
 # Cron Job Authentication
 # ============================================
 CRON_SECRET=your_random_secret_string_here
+
+# ============================================
+# Google Analytics 4 (선택사항)
+# ============================================
+# 웹사이트 방문자 추적을 위해 활성화
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 # ============================================
 # Development Settings
@@ -1133,14 +1146,18 @@ function LanguageSelector() {
 
 ### 배포 전 체크리스트
 
-- [ ] 환경 변수 설정 완료
+- [x] 환경 변수 설정 완료
 - [ ] Firebase 보안 규칙 배포
 - [ ] Firestore 인덱스 생성
-- [ ] Paddle Production 환경 설정
+- [x] Paddle Sandbox 환경 설정 (테스트)
+- [ ] Paddle Production 환경 설정 (운영)
 - [ ] Paddle Webhook URL 업데이트
 - [ ] 프로덕션 도메인 허용 설정
-- [ ] SEO 메타태그 확인
-- [ ] **PWA 아이콘 생성 및 배치** (참고: `ICONS_NEEDED.md`)
+- [x] SEO 메타태그 확인
+- [x] **OG 이미지 생성** (1200x630px) ✅
+- [ ] PWA 아이콘 생성 (192x192, 512x512)
+- [ ] Apple Touch Icon (180x180)
+- [x] **Google Analytics 4 설정** ✅
 - [ ] 에러 모니터링 설정 (Sentry 등)
 
 ---
@@ -1151,10 +1168,10 @@ function LanguageSelector() {
 
 이 프로젝트는 SEO 최적화 및 PWA 기능을 위해 다음 아이콘 파일이 필요합니다:
 
-| 파일 | 크기 | 용도 | 우선순위 |
-|------|------|------|---------|
-| `favicon.ico` | 32x32 | 브라우저 탭 | 🔴 Critical |
-| `og-image.png` | 1200x630 | 소셜 미디어 미리보기 | 🔴 Critical |
+| 파일 | 크기 | 용도 | 우선순위 | 상태 |
+|------|------|------|---------|------|
+| `favicon.ico` | 32x32 | 브라우저 탭 | 🔴 Critical | ⏳ Pending |
+| `og-image.png` | 1200x630 | 소셜 미디어 미리보기 | 🔴 Critical | ✅ **완료** |
 | `icon-192x192.png` | 192x192 | PWA 앱 아이콘 | 🟡 High |
 | `icon-512x512.png` | 512x512 | PWA 앱 아이콘 (고해상도) | 🟡 High |
 | `apple-touch-icon.png` | 180x180 | iOS 홈 화면 | 🟡 High |
@@ -1199,6 +1216,9 @@ convert images/logo.png -resize 1200x630 -gravity center -extent 1200x630 og-ima
 - [x] 구독 취소/재개
 - [x] 결제 수단 변경
 - [x] **설정 페이지 단순화** (사진/이메일 변경 제거)
+- [x] **Google Analytics 4 통합** 📊
+- [x] **OG 이미지 생성** (소셜 미디어 최적화)
+- [x] **Next.js 15.5.9 보안 업데이트** 🔒
 
 ### 개발 중 (🚧)
 - [ ] 프로필 편집 (고급 기능)
@@ -1251,8 +1271,72 @@ convert images/logo.png -resize 1200x630 -gravity center -extent 1200x630 og-ima
 
 ---
 
-**Last Updated:** 2025년 12월 14일
-**Version:** 2.1.0
+## 📊 Google Analytics 4 설정
+
+### 개요
+
+웹사이트 방문자 추적 및 분석을 위해 Google Analytics 4를 통합했습니다.
+
+### 설정 방법
+
+#### 1. Google Analytics 계정 생성
+
+1. [Google Analytics](https://analytics.google.com) 접속
+2. 속성 생성 및 데이터 스트림 설정
+3. **측정 ID** 발급 (G-XXXXXXXXXX)
+
+#### 2. 환경 변수 설정
+
+**로컬 환경 (.env.local)**
+```bash
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+**Vercel 환경 변수**
+- Vercel Dashboard → Settings → Environment Variables
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` 추가
+- Production, Preview, Development 모두 체크
+
+#### 3. 추적 가능한 데이터
+
+- **실시간 사용자**: 현재 접속 중인 사용자 수
+- **페이지뷰**: 각 페이지 방문 횟수
+- **사용자 수**: 총 방문자 수 (일간, 주간, 월간)
+- **세션**: 방문 세션 수
+- **이탈률**: 페이지 이탈률
+- **유입 경로**: 검색, 직접 입력, 소셜 미디어 등
+- **사용자 위치**: 국가, 도시
+- **디바이스**: 모바일, 데스크톱, 태블릿
+- **브라우저**: Chrome, Safari, Firefox 등
+
+#### 4. 테스트 방법
+
+**로컬 테스트:**
+```bash
+npm run dev
+# 브라우저에서 http://localhost:3000 접속
+# F12 → Console → 에러 없으면 정상
+```
+
+**실시간 확인:**
+1. Google Analytics Dashboard
+2. 보고서 → 실시간
+3. 자신의 방문이 표시되는지 확인 (1-2분 소요)
+
+### 구현 파일
+
+```
+components/analytics/
+└── GoogleAnalytics.tsx       # GA4 스크립트 컴포넌트
+
+app/
+└── layout.tsx                # GA4 컴포넌트 통합
+```
+
+---
+
+**Last Updated:** 2025년 12월 15일
+**Version:** 2.2.0
 **Status:** 🚀 Active Development
 
 ---
@@ -1447,6 +1531,30 @@ function isValidData(data: unknown): data is ExpectedType {
 ---
 
 ## 📜 변경 이력
+
+### v2.2.0 (2025-12-15) 📊
+- 🔒 **Next.js 15.5.9 보안 업데이트**
+  - CVE-2025-55182 (React2Shell) 취약점 수정
+  - CVE-2025-55184 (DoS) 취약점 수정
+  - CVE-2025-55183 (Source Code Exposure) 취약점 수정
+  - 치명적인 보안 취약점 전체 패치 완료
+- 📊 **Google Analytics 4 통합**
+  - 웹사이트 방문자 추적 및 분석
+  - 실시간 통계, 페이지뷰, 유입 경로 추적
+  - 로컬 및 Vercel 환경 변수 설정 완료
+  - components/analytics/GoogleAnalytics.tsx 생성
+- 🖼️ **OG 이미지 생성** (1200x630px)
+  - 소셜 미디어 공유 최적화
+  - 카카오톡, 페이스북, 트위터 미리보기 지원
+  - 보라색 그라데이션 배경 + 로고 + 브랜드 메시지
+- 🔧 **환경 변수 개선**
+  - CRON_SECRET 강력한 비밀번호로 업데이트
+  - GA4 측정 ID 설정 완료
+  - Paddle Sandbox 모드 유지 (테스트용)
+- ✅ **빌드 테스트 성공**
+  - 모든 페이지 정상 빌드 (28개)
+  - 타입 체크 통과
+  - ESLint 검사 통과
 
 ### v2.1.0 (2025-12-14) 🎯
 - ✅ **코드 품질 대폭 개선**

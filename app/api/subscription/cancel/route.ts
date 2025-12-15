@@ -208,7 +208,6 @@ export async function POST(request: NextRequest) {
 
           try {
             await batch.commit();
-            console.log(`✅ Updated ${chunk.length} daily docs (immediate cancel)`);
           } catch (error) {
             console.error('Failed to update daily stats:', error);
             // 실패해도 계속 진행

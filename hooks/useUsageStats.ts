@@ -55,23 +55,15 @@ export function useUsageStats(
     userId ? ['usage-stats', userId, actualStartDate, actualEndDate] : null,
     async () => {
       if (!userId) {
-        console.log('⚠️ useUsageStats: userId is null');
         return [];
       }
 
       try {
         const db = getFirestoreInstance();
-        
+
         // ✅ 서브컬렉션 경로: /users/{userId}/daily
         const dailyRef = collection(db, 'users', userId, 'daily');
-        
-        console.log('🔍 Querying daily stats:', {
-          userId,
-          path: `users/${userId}/daily`,
-          startDate: actualStartDate,
-          endDate: actualEndDate,
-        });
-        
+
         // ✅ 복합 쿼리 (인덱스 필요)
         const q = query(
           dailyRef,
@@ -81,16 +73,11 @@ export function useUsageStats(
         );
 
         const snapshot = await getDocs(q);
-        
+
         const results = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as DailyDocument[];
-
-        console.log('✅ Daily stats loaded:', {
-          count: results.length,
-          total: results.reduce((sum, stat) => sum + (stat.count || 0), 0),
-        });
 
         return results;
       } catch (err) {
