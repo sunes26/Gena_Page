@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { Timestamp } from 'firebase-admin/firestore';
-import { verifyPaddleWebhook } from '@/lib/paddle-server';
 
 /**
  * Webhook 재시도 Cron Job
@@ -167,8 +166,8 @@ export async function GET(request: NextRequest) {
  */
 async function retryWebhookProcessing(
   eventType: string,
-  payload: Record<string, unknown>,
-  signature?: string
+  _payload: Record<string, unknown>,
+  _signature?: string
 ): Promise<boolean> {
   try {
     // TODO: 실제 구현에서는 webhook/paddle/route.ts의 processWebhookEvent 사용

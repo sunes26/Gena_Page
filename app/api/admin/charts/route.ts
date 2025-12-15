@@ -8,7 +8,6 @@ import {
   successResponse,
   unauthorizedResponse,
   forbiddenResponse,
-  internalServerErrorResponse,
   safeInternalServerErrorResponse,
 } from '@/lib/api-response';
 

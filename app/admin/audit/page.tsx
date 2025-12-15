@@ -85,7 +85,7 @@ export default function AdminAuditLogsPage() {
 
   useEffect(() => {
     loadLogs();
-  }, [severity, days, eventType, user]);
+  }, [severity, days, eventType, user, loadLogs]);
 
   const handleSearch = () => {
     loadLogs();

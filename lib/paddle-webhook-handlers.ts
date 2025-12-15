@@ -11,7 +11,7 @@
  */
 
 export async function processWebhookPayload(
-  payload: Record<string, unknown>
+  _payload: Record<string, unknown>
 ): Promise<void> {
   // TODO: Implement webhook processing logic
   // This should call the appropriate handler based on event_type

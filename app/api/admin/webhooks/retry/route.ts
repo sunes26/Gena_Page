@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     // 2. 관리자 권한 확인
     try {
       requireAdminToken(decodedToken);
-    } catch (error) {
+    } catch {
       console.error('Admin authorization failed:', {
         email: decodedToken.email,
       });

@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     loadUsers();
-  }, [filter, user, startDate, endDate, page]);
+  }, [filter, user, startDate, endDate, page, loadUsers]);
 
   // 필터 변경 시 페이지를 1로 리셋
   useEffect(() => {

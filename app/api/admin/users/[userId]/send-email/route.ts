@@ -12,7 +12,6 @@ import {
   forbiddenResponse,
   validationErrorResponse,
   notFoundResponse,
-  internalServerErrorResponse,
   safeInternalServerErrorResponse,
 } from '@/lib/api-response';
 
@@ -44,7 +43,7 @@ export async function POST(
     // 2. 관리자 권한 확인
     try {
       requireAdminToken(decodedToken);
-    } catch (error) {
+    } catch {
       return forbiddenResponse('관리자 권한이 필요합니다.');
     }
 
@@ -104,7 +103,11 @@ export async function POST(
     });
 
     if (!sent) {
-      return internalServerErrorResponse('이메일 전송에 실패했습니다.');
+      return safeInternalServerErrorResponse(
+        '이메일 전송에 실패했습니다.',
+        new Error('Email sending failed'),
+        'Send email error'
+      );
     }
 
     return successResponse(

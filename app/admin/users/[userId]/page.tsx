@@ -228,7 +228,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
   useEffect(() => {
     loadUserDetail();
     loadNotes();
-  }, [user, userId]);
+  }, [user, userId, loadUserDetail, loadNotes]);
 
   if (authLoading) {
     return (

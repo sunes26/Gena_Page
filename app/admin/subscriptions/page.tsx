@@ -79,7 +79,7 @@ export default function AdminSubscriptionsPage() {
 
   useEffect(() => {
     loadSubscriptions();
-  }, [filter, user, page]);
+  }, [filter, user, page, loadSubscriptions]);
 
   // 필터 변경 시 페이지를 1로 리셋
   useEffect(() => {

@@ -11,7 +11,6 @@ import {
   unauthorizedResponse,
   forbiddenResponse,
   validationErrorResponse,
-  internalServerErrorResponse,
   safeInternalServerErrorResponse,
 } from '@/lib/api-response';
 
@@ -43,7 +42,7 @@ export async function GET(
     // 2. 관리자 권한 확인
     try {
       requireAdminToken(decodedToken);
-    } catch (error) {
+    } catch {
       return forbiddenResponse('관리자 권한이 필요합니다.');
     }
 
@@ -116,7 +115,7 @@ export async function POST(
     // 2. 관리자 권한 확인
     try {
       requireAdminToken(decodedToken);
-    } catch (error) {
+    } catch {
       return forbiddenResponse('관리자 권한이 필요합니다.');
     }
 

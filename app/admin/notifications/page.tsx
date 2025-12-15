@@ -66,7 +66,7 @@ export default function NotificationsSettingsPage() {
 
   useEffect(() => {
     loadSettings();
-  }, [user]);
+  }, [user, loadSettings]);
 
   // 설정 저장
   const saveSettings = async () => {

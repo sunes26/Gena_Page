@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadStats();
     loadChartData();
-  }, [user, chartDays]);
+  }, [user, chartDays, loadStats, loadChartData]);
 
   if (authLoading) {
     return (

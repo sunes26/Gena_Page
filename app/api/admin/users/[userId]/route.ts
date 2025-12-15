@@ -10,7 +10,6 @@ import {
   unauthorizedResponse,
   forbiddenResponse,
   notFoundResponse,
-  internalServerErrorResponse,
   safeInternalServerErrorResponse,
 } from '@/lib/api-response';
 

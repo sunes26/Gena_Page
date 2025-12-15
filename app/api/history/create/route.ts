@@ -9,7 +9,6 @@ import {
   successResponse,
   unauthorizedResponse,
   validationErrorResponse,
-  internalServerErrorResponse,
   safeInternalServerErrorResponse,
 } from '@/lib/api-response';
 import { z } from 'zod';

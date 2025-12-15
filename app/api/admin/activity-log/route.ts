@@ -14,7 +14,6 @@ import {
   unauthorizedResponse,
   forbiddenResponse,
   validationErrorResponse,
-  internalServerErrorResponse,
   safeInternalServerErrorResponse,
 } from '@/lib/api-response';
 
@@ -41,15 +40,14 @@ export async function POST(request: NextRequest) {
 
     try {
       decodedToken = await verifyIdToken(token);
-    } catch (error) {
-      console.error('Token verification error:', error);
+    } catch {
       return unauthorizedResponse('토큰이 유효하지 않거나 만료되었습니다.');
     }
 
     // 2. 관리자 권한 확인
     try {
       requireAdminToken(decodedToken);
-    } catch (error) {
+    } catch {
       return forbiddenResponse('관리자 권한이 필요합니다.');
     }
 

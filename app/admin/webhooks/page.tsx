@@ -78,7 +78,7 @@ export default function AdminWebhooksPage() {
 
   useEffect(() => {
     loadLogs();
-  }, [filter, days, user]);
+  }, [filter, days, user, loadLogs]);
 
   // 로그인 확인
   if (authLoading) {
