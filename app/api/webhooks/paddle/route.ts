@@ -17,7 +17,7 @@ import {
 } from '@/lib/audit';
 import { safeInternalServerErrorResponse } from '@/lib/api-response';
 
-type PaddleEventType =
+export type PaddleEventType =
   | 'subscription.created'
   | 'subscription.updated'
   | 'subscription.canceled'

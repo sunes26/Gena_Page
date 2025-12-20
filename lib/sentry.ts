@@ -23,7 +23,6 @@ async function loadSentry(): Promise<any> {
   if (Sentry) return Sentry;
 
   try {
-    // @ts-expect-error - Optional dependency, may not be installed
     Sentry = await import('@sentry/nextjs');
     return Sentry;
   } catch {

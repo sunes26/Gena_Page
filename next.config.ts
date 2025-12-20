@@ -61,9 +61,6 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-
-    // ✅ Sentry instrumentation 활성화
-    instrumentationHook: true,
   },
 
   /* ========================================
@@ -222,7 +219,6 @@ export default withSentryConfig(nextConfig, {
 
   // 소스맵 업로드 설정 (선택사항)
   widenClientFileUpload: true,
-  hideSourceMaps: true,
   disableLogger: true,
 
   // Sentry organization과 project는 환경 변수로 설정 가능

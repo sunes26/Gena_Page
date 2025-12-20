@@ -17,17 +17,15 @@ import {
  * 실제 웹훅 핸들러 로직을 재사용
  */
 async function processWebhookRetry(
-  payload: Record<string, unknown>
+  _payload: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // TODO: 웹훅 핸들러 로직 구현 필요
     // Note: 이 함수는 app/api/webhooks/paddle/route.ts의 핸들러 로직을 재사용해야 함
     // 실제 구현에서는 핸들러 로직을 별도 함수로 분리하여 재사용하는 것이 좋음
 
-    // 임시 구현: 핸들러 모듈을 동적으로 import하여 처리
-    const { processWebhookPayload } = await import('@/lib/paddle-webhook-handlers');
-    await processWebhookPayload(payload);
-
-    return { success: true };
+    console.warn('Webhook retry processing not implemented yet');
+    return { success: false, error: 'Not implemented' };
   } catch (error) {
     return {
       success: false,

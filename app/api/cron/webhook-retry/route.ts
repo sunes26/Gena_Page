@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { notifyWebhookFailure } from '@/lib/notifications';
+import type { PaddleEventType } from '@/app/api/webhooks/paddle/route';
 
 /**
  * Webhook 재시도 Cron Job
@@ -184,7 +185,7 @@ async function retryWebhookProcessing(
     // payload에서 data 추출
     const data = payload.data || payload;
 
-    await processWebhookEvent(eventType as any, data);
+    await processWebhookEvent(eventType as PaddleEventType, data);
 
     console.log(`✅ Webhook retry successful: ${eventType}`);
     return true;

@@ -18,67 +18,48 @@
 // ✅ 브라우저 환경 체크
 const isBrowser = typeof window !== 'undefined';
 
+// 타입 정의
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogContext {
+  [key: string]: unknown;
+}
+
+// Sentry 타입 정의
+interface SentryWindow extends Window {
+  Sentry?: {
+    captureException: (error: Error, context?: unknown) => void;
+    captureMessage: (message: string, context?: unknown) => void;
+  };
+}
+
+interface LogEntry {
+  level: LogLevel;
+  message: string;
+  timestamp: string;
+  context?: LogContext;
+  error?: Error;
+}
+
+// Logger 선언 (조건부 할당)
+let logger: unknown;
+let createLogger: (context: LogContext | Record<string, unknown>) => unknown;
+let authLogger: unknown;
+let apiLogger: unknown;
+let paddleLogger: unknown;
+let firebaseLogger: unknown;
+
 // 브라우저 환경에서는 간단한 로거 사용
 if (isBrowser) {
-  // 브라우저용 로거 (기존 코드 유지)
-  type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
-  interface LogContext {
-    [key: string]: unknown;
-  }
-
-  interface LogEntry {
-    level: LogLevel;
-    message: string;
-    timestamp: string;
-    context?: LogContext;
-    error?: Error;
-  }
-
+  // 브라우저용 로거
   class Logger {
-    private isDevelopment: boolean;
-    private isProduction: boolean;
-
-    constructor() {
-      this.isDevelopment = process.env.NODE_ENV === 'development';
-      this.isProduction = process.env.NODE_ENV === 'production';
-    }
+    private isDevelopment = process.env.NODE_ENV === 'development';
+    private isProduction = process.env.NODE_ENV === 'production';
 
     /**
-     * Debug level logging (only in development)
+     * Internal log function
      */
-    debug(message: string, context?: LogContext) {
-      if (this.isDevelopment) {
-        this.log('debug', message, context);
-      }
-    }
-
-    /**
-     * Info level logging
-     */
-    info(message: string, context?: LogContext) {
-      this.log('info', message, context);
-    }
-
-    /**
-     * Warning level logging
-     */
-    warn(message: string, context?: LogContext) {
-      this.log('warn', message, context);
-    }
-
-    /**
-     * Error level logging
-     */
-    error(message: string, error?: Error | unknown, context?: LogContext) {
-      const errorObj = error instanceof Error ? error : undefined;
-      this.log('error', message, context, errorObj);
-    }
-
-    /**
-     * Core logging method
-     */
-    private log(level: LogLevel, message: string, context?: LogContext, error?: Error) {
+    private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
       const entry: LogEntry = {
         level,
         message,
@@ -93,7 +74,7 @@ if (isBrowser) {
       }
 
       // Production: Send to Sentry
-      if (this.isProduction && typeof window !== 'undefined' && (window as any).Sentry) {
+      if (this.isProduction && typeof window !== 'undefined' && (window as SentryWindow).Sentry) {
         this.sendToSentry(entry);
       }
     }
@@ -107,20 +88,19 @@ if (isBrowser) {
         info: 'ℹ️',
         warn: '⚠️',
         error: '❌',
-      }[entry.level];
+      };
 
       const color = {
-        debug: '\x1b[36m', // Cyan
-        info: '\x1b[34m',  // Blue
-        warn: '\x1b[33m',  // Yellow
-        error: '\x1b[31m', // Red
-      }[entry.level];
+        debug: 'color: #888',
+        info: 'color: #0066cc',
+        warn: 'color: #ff9800',
+        error: 'color: #f44336',
+      };
 
-      const reset = '\x1b[0m';
-
-      const prefix = `${color}[${entry.level.toUpperCase()}]${reset} ${emoji}`;
-
-      console.log(`${prefix} ${entry.message}`);
+      console.log(
+        `%c${emoji[entry.level]} [${entry.level.toUpperCase()}] ${entry.message}`,
+        color[entry.level]
+      );
 
       if (entry.context && Object.keys(entry.context).length > 0) {
         console.log('  Context:', entry.context);
@@ -135,7 +115,7 @@ if (isBrowser) {
      * Send logs to Sentry
      */
     private sendToSentry(entry: LogEntry) {
-      const Sentry = (window as any).Sentry;
+      const Sentry = (window as SentryWindow).Sentry;
       if (!Sentry) return;
 
       if (entry.level === 'error' && entry.error) {
@@ -158,29 +138,55 @@ if (isBrowser) {
      */
     child(defaultContext: LogContext): Logger {
       const childLogger = new Logger();
-      const originalLog = (childLogger as any).log.bind(childLogger);
+      const originalLog = childLogger['log'].bind(childLogger) as (
+        level: LogLevel,
+        message: string,
+        context?: LogContext,
+        error?: Error
+      ) => void;
 
-      (childLogger as any).log = (level: LogLevel, message: string, context?: LogContext, error?: Error) => {
+      childLogger['log'] = (level: LogLevel, message: string, context?: LogContext, error?: Error) => {
         const mergedContext = { ...defaultContext, ...context };
         originalLog(level, message, mergedContext, error);
       };
 
       return childLogger;
     }
+
+    debug(message: string, context?: LogContext) {
+      this.log('debug', message, context);
+    }
+
+    info(message: string, context?: LogContext) {
+      this.log('info', message, context);
+    }
+
+    warn(message: string, context?: LogContext) {
+      this.log('warn', message, context);
+    }
+
+    error(message: string, contextOrError?: LogContext | Error, error?: Error) {
+      if (contextOrError instanceof Error) {
+        this.log('error', message, undefined, contextOrError);
+      } else {
+        this.log('error', message, contextOrError, error);
+      }
+    }
   }
 
   // Export singleton instance
-  export const logger = new Logger();
-  export const createLogger = (context: LogContext) => logger.child(context);
+  logger = new Logger();
+  createLogger = (context: LogContext) => (logger as Logger).child(context);
 
   // Convenience exports for common use cases
-  export const authLogger = createLogger({ module: 'auth' });
-  export const apiLogger = createLogger({ module: 'api' });
-  export const paddleLogger = createLogger({ module: 'paddle' });
-  export const firebaseLogger = createLogger({ module: 'firebase' });
+  authLogger = createLogger({ module: 'auth' });
+  apiLogger = createLogger({ module: 'api' });
+  paddleLogger = createLogger({ module: 'paddle' });
+  firebaseLogger = createLogger({ module: 'firebase' });
 
 } else {
   // 서버 환경: Pino 사용
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pino = require('pino');
 
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -196,11 +202,10 @@ if (isBrowser) {
       revision: process.env.VERCEL_GIT_COMMIT_SHA,
     },
 
-    // 타임스탬프 형식
-    timestamp: pino.stdTimeFunctions.isoTime,
+    // 타임스탬프 포맷
+    timestamp: () => `,"time":"${new Date().toISOString()}"`,
 
-    // 개발 환경: 예쁘게 출력
-    // 프로덕션: JSON 형식 (로그 분석 도구용)
+    // Pretty print for development
     transport: isDevelopment ? {
       target: 'pino-pretty',
       options: {
@@ -245,21 +250,22 @@ if (isBrowser) {
   });
 
   // Pino logger export
-  export const logger = pinoLogger;
+  logger = pinoLogger;
 
   /**
    * 자식 로거 생성 (컨텍스트 추가)
    */
-  export function createLogger(context: Record<string, unknown>) {
+  createLogger = (context: Record<string, unknown>) => {
     return pinoLogger.child(context);
-  }
+  };
 
   // Convenience exports for common use cases
-  export const authLogger = createLogger({ module: 'auth' });
-  export const apiLogger = createLogger({ module: 'api' });
-  export const paddleLogger = createLogger({ module: 'paddle' });
-  export const firebaseLogger = createLogger({ module: 'firebase' });
+  authLogger = createLogger({ module: 'auth' });
+  apiLogger = createLogger({ module: 'api' });
+  paddleLogger = createLogger({ module: 'paddle' });
+  firebaseLogger = createLogger({ module: 'firebase' });
 }
 
-// Default export
+// Export
+export { logger, createLogger, authLogger, apiLogger, paddleLogger, firebaseLogger };
 export default logger;
