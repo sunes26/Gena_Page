@@ -20,7 +20,10 @@
       "Bash(dir:*)",
       "Bash(test:*)",
       "Bash(cat:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git commit:*)",
+      "Bash(certutil -hashfile:*)",
+      "Bash(certutil:*)"
     ]
   }
 }

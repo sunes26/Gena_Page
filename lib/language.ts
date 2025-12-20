@@ -3,13 +3,13 @@
  * 언어 관리 유틸리티
  * - localStorage를 사용하여 사용자 선택 언어 저장
  * - 쿼리 파라미터(?lang=ko or ?lang=en)에서 언어 감지
- * - 기본 언어: en (영어)
+ * - 기본 언어: ko (한국어)
  */
 
 export type Locale = 'ko' | 'en';
 
 const STORAGE_KEY = 'gena_locale';
-const DEFAULT_LOCALE: Locale = 'en'; // 기본 언어: 영어
+const DEFAULT_LOCALE: Locale = 'ko'; // 기본 언어: 한국어
 
 /**
  * 현재 선택된 언어 가져오기
@@ -94,7 +94,7 @@ export function detectBrowserLocale(): Locale {
  * 1. 쿼리 파라미터 확인 (?lang=ko or ?lang=en) - 최우선
  * 2. 브라우저 언어 확인 (navigator.language) - 항상 확인
  * 3. localStorage 확인 - 브라우저 언어가 한/영이 아닐 경우
- * 4. 기본 언어 사용 (en)
+ * 4. 기본 언어 사용 (ko)
  *
  * @param searchParams URLSearchParams 객체
  * @returns 'ko' | 'en'

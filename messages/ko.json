@@ -623,5 +623,108 @@
       "language": "🇰🇷 한국어",
       "madeIn": "Made with in Seoul"
     }
+  },
+  "about": {
+    "hero": {
+      "title": "Gena에 대하여",
+      "subtitle": "우리는 AI 기술로 정보 접근성을 혁신하여 모두가 빠르고 효율적으로 지식을 얻을 수 있도록 돕습니다."
+    },
+    "story": {
+      "title": "우리의 이야기",
+      "paragraph1": "Gena는 정보 과부하 시대에 사용자들이 더 효율적으로 정보를 소비할 수 있도록 돕기 위해 시작되었습니다.",
+      "paragraph2": "매일 수많은 웹페이지와 문서를 읽어야 하는 현대인들을 위해, 우리는 AI 기술을 활용하여 핵심 정보만을 빠르게 추출하고 이해하기 쉽게 제공합니다.",
+      "paragraph3": "사용자의 시간과 집중력은 소중합니다. Gena는 이를 존중하며, 더 나은 정보 경험을 제공하기 위해 끊임없이 발전하고 있습니다."
+    },
+    "values": {
+      "title": "우리의 가치",
+      "mission": {
+        "title": "명확한 목표",
+        "description": "정보를 빠르고 정확하게 전달하여 사용자의 시간을 절약합니다."
+      },
+      "users": {
+        "title": "사용자 중심",
+        "description": "사용자의 경험과 피드백을 최우선으로 생각합니다."
+      },
+      "innovation": {
+        "title": "지속적 혁신",
+        "description": "최신 AI 기술을 활용하여 더 나은 서비스를 제공합니다."
+      }
+    },
+    "cta": {
+      "title": "함께 시작하세요",
+      "subtitle": "지금 Gena와 함께 더 효율적인 정보 소비를 경험해보세요.",
+      "getStarted": "무료로 시작하기",
+      "contactUs": "문의하기"
+    }
+  },
+  "careers": {
+    "hero": {
+      "title": "함께 성장할 인재를 찾습니다",
+      "subtitle": "Gena와 함께 AI 기반 정보 플랫폼의 미래를 만들어갈 열정적인 팀원을 기다립니다."
+    },
+    "benefits": {
+      "title": "이런 점이 좋아요",
+      "growth": {
+        "title": "성장 기회",
+        "description": "최신 기술을 배우고 실무에 적용하며 성장할 수 있습니다."
+      },
+      "culture": {
+        "title": "유연한 문화",
+        "description": "수평적이고 자율적인 업무 환경에서 일할 수 있습니다."
+      },
+      "flexibility": {
+        "title": "워라밸",
+        "description": "원격 근무와 유연한 근무 시간을 지원합니다."
+      }
+    },
+    "openings": {
+      "noPositions": {
+        "title": "현재 채용 중인 포지션이 없습니다",
+        "description": "하지만 항상 훌륭한 인재를 찾고 있습니다. 관심이 있으시다면 언제든지 연락 주세요!",
+        "contactButton": "문의하기"
+      }
+    },
+    "future": {
+      "title": "함께 미래를 만들어가요",
+      "description": "Gena와 함께 AI 기반 정보 서비스의 새로운 기준을 만들어갈 준비가 되셨나요?"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "문의하기",
+      "subtitle": "궁금한 점이 있으신가요? 언제든지 연락 주세요. 빠르게 답변 드리겠습니다."
+    },
+    "methods": {
+      "email": {
+        "title": "이메일",
+        "description": "일반 문의 및 제안은 이메일로 보내주세요.",
+        "action": "이메일 보내기"
+      },
+      "support": {
+        "title": "고객 지원",
+        "description": "계정 또는 기술적 문제는 여기로 문의하세요.",
+        "action": "지원 센터"
+      },
+      "docs": {
+        "title": "도움말",
+        "description": "자주 묻는 질문과 가이드를 확인하세요.",
+        "action": "FAQ 보기"
+      }
+    },
+    "info": {
+      "title": "연락처 정보",
+      "email": {
+        "label": "이메일"
+      },
+      "response": {
+        "label": "응답 시간",
+        "time": "영업일 기준 24시간 이내"
+      }
+    },
+    "cta": {
+      "title": "지금 시작하세요",
+      "subtitle": "문의하기 전에 Gena를 직접 경험해보세요.",
+      "button": "무료로 시작하기"
+    }
   }
 }

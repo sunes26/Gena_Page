@@ -232,6 +232,16 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // webhook_retry_queue: 웹훅 재시도 큐
+    match /webhook_retry_queue/{queueId} {
+      allow read, write: if false;
+    }
+
+    // webhook_failures: 웹훅 실패 로그
+    match /webhook_failures/{failureId} {
+      allow read, write: if false;
+    }
+
     // ========================================
     // 6. 기타 시스템 컬렉션
     // ========================================

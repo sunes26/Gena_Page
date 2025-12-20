@@ -40,10 +40,9 @@ export default function RefundPolicyPage() {
     { id: 'article-2', title: '제2조(환불 정책)' },
     { id: 'article-3', title: '제3조(환불 가능 기간)' },
     { id: 'article-4', title: '제4조(환불 절차)' },
-    { id: 'article-5', title: '제5조(환불 불가 사유)' },
-    { id: 'article-6', title: '제6조(환불 처리 기간)' },
-    { id: 'article-7', title: '제7조(부분 환불)' },
-    { id: 'article-8', title: '제8조(문의)' },
+    { id: 'article-5', title: '제5조(환불 처리 기간)' },
+    { id: 'article-6', title: '제6조(소비자 권리)' },
+    { id: 'article-7', title: '제7조(문의)' },
   ];
 
   // 목차 항목 (영어)
@@ -52,10 +51,9 @@ export default function RefundPolicyPage() {
     { id: 'article-2', title: 'Article 2 (Refund Policy)' },
     { id: 'article-3', title: 'Article 3 (Refund Period)' },
     { id: 'article-4', title: 'Article 4 (Refund Procedure)' },
-    { id: 'article-5', title: 'Article 5 (Non-Refundable Cases)' },
-    { id: 'article-6', title: 'Article 6 (Refund Processing Time)' },
-    { id: 'article-7', title: 'Article 7 (Partial Refund)' },
-    { id: 'article-8', title: 'Article 8 (Contact)' },
+    { id: 'article-5', title: 'Article 5 (Refund Processing Time)' },
+    { id: 'article-6', title: 'Article 6 (Consumer Rights)' },
+    { id: 'article-7', title: 'Article 7 (Contact)' },
   ];
 
   const tableOfContents = locale === 'ko' ? tableOfContentsKo : tableOfContentsEn;
@@ -136,21 +134,26 @@ export default function RefundPolicyPage() {
                   {/* Article 2 */}
                   <section id="article-2" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제2조(환불 정책)</h2>
-                    <p>회사는 다음과 같은 환불 정책을 운영합니다.</p>
-                    <ol className="list-decimal pl-6 space-y-2 mt-2">
-                      <li>회원이 유료 서비스를 구매한 후 정당한 사유로 환불을 요청할 경우, 회사는 관련 법령 및 본 정책에 따라 환불을 처리합니다.</li>
-                      <li>환불은 원칙적으로 결제 수단과 동일한 방법으로 처리됩니다.</li>
-                      <li>회사는 환불 요청 시 회원이 제공한 정보를 확인하여 환불 가능 여부를 판단합니다.</li>
-                    </ol>
+                    <p>
+                      본 서비스의 결제는 Paddle을 통해 처리되며, 환불은 Paddle의 환불 정책에 따라 케이스별로 처리됩니다.
+                    </p>
+                    <p className="mt-4">
+                      Paddle은 사기, 환불 남용 또는 기타 조작 행위의 증거가 발견되는 경우 환불 요청을 거부할 수 있습니다.
+                    </p>
+                    <p className="mt-4">
+                      이는 제품이 설명과 다르거나, 결함이 있거나, 목적에 적합하지 않은 경우 소비자로서의 귀하의 권리에 영향을 미치지 않습니다.
+                    </p>
                   </section>
 
                   {/* Article 3 */}
                   <section id="article-3" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">제3조(환불 가능 기간)</h2>
-                    <ol className="list-decimal pl-6 space-y-2">
-                      <li>구독 서비스의 경우, 결제일로부터 7일 이내에 서비스를 한번도 이용하지 않은 경우 전액 환불이 가능합니다.</li>
-                      <li>7일이 경과한 후에는 환불이 불가능하며, 구독 해지만 가능합니다.</li>
-                    </ol>
+                    <p>
+                      구독 서비스의 경우, 결제일로부터 14일 이내에 환불을 요청할 수 있습니다.
+                    </p>
+                    <p className="mt-4">
+                      환불 요청은 케이스별로 검토되며, Paddle의 재량에 따라 처리됩니다.
+                    </p>
                   </section>
 
                   {/* Article 4 */}
@@ -173,38 +176,29 @@ export default function RefundPolicyPage() {
 
                   {/* Article 5 */}
                   <section id="article-5" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">제5조(환불 불가 사유)</h2>
-                    <p>다음의 경우 환불이 불가능합니다.</p>
-                    <ul className="list-disc pl-6 space-y-2 mt-2">
-                      <li>구매일로부터 7일이 경과한 경우</li>
-                      <li>회원의 귀책사유로 인해 서비스 이용이 제한된 경우</li>
-                      <li>이벤트, 프로모션 등을 통해 무료로 제공받은 서비스</li>
-                      <li>회원이 본 약관 및 정책을 위반하여 이용 제한 조치를 받은 경우</li>
-                    </ul>
-                  </section>
-
-                  {/* Article 6 */}
-                  <section id="article-6" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">제6조(환불 처리 기간)</h2>
+                    <h2 className="text-2xl font-bold mb-4">제5조(환불 처리 기간)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
                       <li>환불 승인 후 처리 기간은 결제 수단에 따라 다를 수 있습니다.</li>
                       <li>신용카드 결제의 경우 환불 승인 후 3~5 영업일 이내에 처리됩니다.</li>
                       <li>기타 결제 수단의 경우 해당 결제사의 정책에 따라 처리됩니다.</li>
-                      <li>환불 처리가 지연되는 경우, 회사는 회원에게 그 사유를 통지합니다.</li>
+                      <li>환불 처리가 지연되는 경우, 그 사유를 통지합니다.</li>
                     </ol>
+                  </section>
+
+                  {/* Article 6 */}
+                  <section id="article-6" className="mb-8">
+                    <h2 className="text-2xl font-bold mb-4">제6조(소비자 권리)</h2>
+                    <p>
+                      본 환불 정책은 제품이 설명과 다르거나, 결함이 있거나, 목적에 적합하지 않은 경우 소비자로서의 귀하의 권리에 영향을 미치지 않습니다.
+                    </p>
+                    <p className="mt-4">
+                      소비자 권리 보호와 관련된 문제는 관련 법령에 따라 처리됩니다.
+                    </p>
                   </section>
 
                   {/* Article 7 */}
                   <section id="article-7" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">제7조(부분 환불)</h2>
-                    <p>
-                      부분 환불은 원칙적으로 제공하지 않습니다. 단, 회사의 귀책사유로 인해 서비스 제공이 불가능한 경우, 이용하지 못한 기간에 대해 일할 계산하여 환불할 수 있습니다.
-                    </p>
-                  </section>
-
-                  {/* Article 8 */}
-                  <section id="article-8" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">제8조(문의)</h2>
+                    <h2 className="text-2xl font-bold mb-4">제7조(문의)</h2>
                     <p>환불 관련 문의사항이 있으시면 아래 연락처로 문의해 주시기 바랍니다.</p>
 
                     <div className="bg-blue-50 p-6 rounded-lg mt-4">
@@ -238,21 +232,26 @@ export default function RefundPolicyPage() {
                   {/* Article 2 */}
                   <section id="article-2" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 2 (Refund Policy)</h2>
-                    <p>The Company operates the following refund policy:</p>
-                    <ol className="list-decimal pl-6 space-y-2 mt-2">
-                      <li>When a member requests a refund for a legitimate reason after purchasing a paid service, the Company processes the refund in accordance with relevant laws and this policy.</li>
-                      <li>Refunds are processed in principle through the same payment method used for the original transaction.</li>
-                      <li>The Company determines refund eligibility by verifying the information provided by the member when requesting a refund.</li>
-                    </ol>
+                    <p>
+                      Payments for this Service are processed through Paddle, and refunds are handled on a case-by-case basis in accordance with Paddle&apos;s refund policy.
+                    </p>
+                    <p className="mt-4">
+                      Paddle may decline refund requests if there is evidence of fraud, refund abuse, or other manipulative behavior.
+                    </p>
+                    <p className="mt-4">
+                      This does not affect your rights as a consumer if the product is not as described, is defective, or is not fit for purpose.
+                    </p>
                   </section>
 
                   {/* Article 3 */}
                   <section id="article-3" className="mb-8">
                     <h2 className="text-2xl font-bold mb-4">Article 3 (Refund Period)</h2>
-                    <ol className="list-decimal pl-6 space-y-2">
-                      <li>For subscription services, a full refund is available within 7 days from the payment date if the service has not been used at all.</li>
-                      <li>After 7 days have elapsed, refunds are not possible, and only subscription cancellation is available.</li>
-                    </ol>
+                    <p>
+                      For subscription services, you may request a refund within 14 days from the payment date.
+                    </p>
+                    <p className="mt-4">
+                      Refund requests are reviewed on a case-by-case basis and are processed at Paddle&apos;s discretion.
+                    </p>
                   </section>
 
                   {/* Article 4 */}
@@ -275,19 +274,7 @@ export default function RefundPolicyPage() {
 
                   {/* Article 5 */}
                   <section id="article-5" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Article 5 (Non-Refundable Cases)</h2>
-                    <p>Refunds are not available in the following cases:</p>
-                    <ul className="list-disc pl-6 space-y-2 mt-2">
-                      <li>More than 7 days have elapsed since the purchase date</li>
-                      <li>Service use is restricted due to the member&apos;s fault</li>
-                      <li>Services provided free of charge through events, promotions, etc.</li>
-                      <li>Usage restrictions imposed due to violation of the Terms and Policies</li>
-                    </ul>
-                  </section>
-
-                  {/* Article 6 */}
-                  <section id="article-6" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Article 6 (Refund Processing Time)</h2>
+                    <h2 className="text-2xl font-bold mb-4">Article 5 (Refund Processing Time)</h2>
                     <ol className="list-decimal pl-6 space-y-2">
                       <li>The processing time after refund approval may vary depending on the payment method.</li>
                       <li>For credit card payments, processing occurs within 3-5 business days after refund approval.</li>
@@ -296,17 +283,20 @@ export default function RefundPolicyPage() {
                     </ol>
                   </section>
 
-                  {/* Article 7 */}
-                  <section id="article-7" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Article 7 (Partial Refund)</h2>
+                  {/* Article 6 */}
+                  <section id="article-6" className="mb-8">
+                    <h2 className="text-2xl font-bold mb-4">Article 6 (Consumer Rights)</h2>
                     <p>
-                      Partial refunds are not provided in principle. However, if service provision is impossible due to the Company&apos;s fault, a prorated refund may be provided for the period not used.
+                      This policy does not affect your statutory consumer rights. If the product is not as described, is defective, or is not fit for purpose, you may be entitled to a refund regardless of the refund period.
+                    </p>
+                    <p className="mt-4">
+                      For more information about your consumer rights, please refer to the consumer protection laws in your jurisdiction.
                     </p>
                   </section>
 
-                  {/* Article 8 */}
-                  <section id="article-8" className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Article 8 (Contact)</h2>
+                  {/* Article 7 */}
+                  <section id="article-7" className="mb-8">
+                    <h2 className="text-2xl font-bold mb-4">Article 7 (Contact)</h2>
                     <p>If you have any refund-related inquiries, please contact us at the following address:</p>
 
                     <div className="bg-blue-50 p-6 rounded-lg mt-4">

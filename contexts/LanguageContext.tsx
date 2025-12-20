@@ -25,7 +25,7 @@ interface LanguageProviderProps {
  * 앱 전체에 언어 설정을 제공합니다.
  */
 export function LanguageProvider({ children, initialLocale }: LanguageProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(initialLocale || 'en');
+  const [locale, setLocaleState] = useState<Locale>(initialLocale || 'ko');
   const [mounted, setMounted] = useState(false);
 
   // 클라이언트 사이드에서만 초기화

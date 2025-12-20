@@ -623,5 +623,108 @@
       "language": "🇺🇸 English",
       "madeIn": "Made with in Seoul"
     }
+  },
+  "about": {
+    "hero": {
+      "title": "About Gena",
+      "subtitle": "We revolutionize information accessibility with AI technology to help everyone gain knowledge quickly and efficiently."
+    },
+    "story": {
+      "title": "Our Story",
+      "paragraph1": "Gena was born to help users consume information more efficiently in the age of information overload.",
+      "paragraph2": "For modern people who need to read countless web pages and documents every day, we use AI technology to quickly extract only the essential information and present it in an easy-to-understand manner.",
+      "paragraph3": "Your time and focus are precious. Gena respects this and continues to evolve to provide a better information experience."
+    },
+    "values": {
+      "title": "Our Values",
+      "mission": {
+        "title": "Clear Mission",
+        "description": "Save users' time by delivering information quickly and accurately."
+      },
+      "users": {
+        "title": "User-Centric",
+        "description": "We prioritize user experience and feedback above all else."
+      },
+      "innovation": {
+        "title": "Continuous Innovation",
+        "description": "Provide better services using the latest AI technology."
+      }
+    },
+    "cta": {
+      "title": "Get Started Together",
+      "subtitle": "Experience more efficient information consumption with Gena now.",
+      "getStarted": "Get Started Free",
+      "contactUs": "Contact Us"
+    }
+  },
+  "careers": {
+    "hero": {
+      "title": "Join Our Growing Team",
+      "subtitle": "We're looking for passionate team members to build the future of AI-powered information platforms with Gena."
+    },
+    "benefits": {
+      "title": "Why Join Us",
+      "growth": {
+        "title": "Growth Opportunities",
+        "description": "Learn and apply cutting-edge technologies while growing professionally."
+      },
+      "culture": {
+        "title": "Flexible Culture",
+        "description": "Work in a horizontal and autonomous environment."
+      },
+      "flexibility": {
+        "title": "Work-Life Balance",
+        "description": "We support remote work and flexible working hours."
+      }
+    },
+    "openings": {
+      "noPositions": {
+        "title": "No Open Positions Currently",
+        "description": "However, we're always looking for great talent. If you're interested, feel free to reach out anytime!",
+        "contactButton": "Contact Us"
+      }
+    },
+    "future": {
+      "title": "Build the Future Together",
+      "description": "Are you ready to create new standards for AI-powered information services with Gena?"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "Contact Us",
+      "subtitle": "Have questions? Feel free to reach out. We'll respond quickly."
+    },
+    "methods": {
+      "email": {
+        "title": "Email",
+        "description": "Send us your general inquiries and suggestions via email.",
+        "action": "Send Email"
+      },
+      "support": {
+        "title": "Customer Support",
+        "description": "Contact us for account or technical issues.",
+        "action": "Support Center"
+      },
+      "docs": {
+        "title": "Help",
+        "description": "Check out frequently asked questions and guides.",
+        "action": "View FAQ"
+      }
+    },
+    "info": {
+      "title": "Contact Information",
+      "email": {
+        "label": "Email"
+      },
+      "response": {
+        "label": "Response Time",
+        "time": "Within 24 hours on business days"
+      }
+    },
+    "cta": {
+      "title": "Start Now",
+      "subtitle": "Experience Gena yourself before reaching out.",
+      "button": "Get Started Free"
+    }
   }
 }
