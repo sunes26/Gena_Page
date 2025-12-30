@@ -3,12 +3,11 @@
 
 import { useState } from 'react';
 import { Tab } from '@headlessui/react';
-import { Settings, User, Shield, BarChart3 } from 'lucide-react';
+import { Settings, User, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import ProfileSettings from '@/components/dashboard/ProfileSettings';
 import SecuritySettings from '@/components/dashboard/SecuritySettings';
-import StatsOverview from '@/components/dashboard/StatsOverview';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -53,11 +52,6 @@ export default function SettingsPage() {
       icon: Shield,
       component: <SecuritySettings key={refreshKey} user={user} onUpdate={handleUpdate} />,
     },
-    {
-      name: '통계',
-      icon: BarChart3,
-      component: <StatsOverview key={refreshKey} userId={user.uid} />,
-    },
   ];
 
   return (
@@ -70,7 +64,7 @@ export default function SettingsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">설정</h1>
           <p className="text-sm text-gray-500 mt-1">
-            프로필, 보안 및 통계를 관리하세요
+            프로필과 보안을 관리하세요
           </p>
         </div>
       </div>

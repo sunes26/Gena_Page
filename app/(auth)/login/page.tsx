@@ -1,13 +1,13 @@
 // app/(auth)/login/page.tsx
 'use client';
 
-import { Suspense } from 'react';
-import { useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmail, createSession } from '@/lib/auth';
 import { getAuthErrorKey, getAuthErrorType, type AuthErrorType } from '@/lib/auth-errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/contexts/AuthContext';
 import { getFirestoreInstance } from '@/lib/firebase/client';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import DynamicMeta from '@/components/seo/DynamicMeta';
@@ -76,8 +76,16 @@ function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
-  
+
   const { t } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
+
+  // ✅ 이미 로그인한 사용자는 dashboard로 리다이렉트 (useEffect 사용)
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [authLoading, user, router]);
 
   const handleError = (err: unknown) => {
     console.error('Auth error:', err);
@@ -144,11 +152,10 @@ function LoginFormContent() {
       const idToken = await userCredential.user.getIdToken();
       await createSession(idToken);
 
-      router.push(redirect);
-      router.refresh();
+      // ✅ 강제 페이지 새로고침으로 리다이렉트 (AuthContext 확실히 업데이트)
+      window.location.href = redirect;
     } catch (error) {
       handleError(error);
-    } finally {
       setLoading(false);
     }
   };

@@ -154,14 +154,34 @@ export async function createSession(idToken: string): Promise<void> {
  * 세션 쿠키 삭제 (로그아웃 시 호출)
  */
 export async function deleteSession(): Promise<void> {
+  // CSRF 토큰 가져오기
+  const csrfToken = getCookie('__Host-csrf-token');
+
   const response = await fetch('/api/auth/session', {
     method: 'DELETE',
+    headers: {
+      ...(csrfToken && { 'x-csrf-token': csrfToken }),
+    },
   });
 
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to delete session');
   }
+}
+
+/**
+ * 쿠키 값 가져오기 (클라이언트 사이드)
+ */
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift();
+  }
+  return undefined;
 }
 
 /**

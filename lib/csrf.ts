@@ -21,13 +21,14 @@ function generateToken(): string {
 
 /**
  * CSRF 토큰을 쿠키에 설정
+ * ✅ httpOnly: false - 클라이언트가 헤더에 포함시킬 수 있도록
  */
 export async function setCSRFToken(): Promise<string> {
   const token = generateToken();
   const cookieStore = await cookies();
 
   cookieStore.set(CSRF_TOKEN_NAME, token, {
-    httpOnly: true,
+    httpOnly: false, // ✅ 클라이언트에서 읽을 수 있도록 설정
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',

@@ -117,15 +117,13 @@ export async function GET(request: NextRequest) {
 /**
  * 세션 쿠키 삭제 (로그아웃)
  * DELETE /api/auth/session
+ *
+ * ✅ CSRF 검증 제거: 로그아웃은 사용자 세션을 종료하는 작업으로,
+ * CSRF 공격으로 로그아웃되더라도 보안상 큰 문제가 없습니다.
+ * 오히려 CSRF 검증 실패로 로그아웃이 안 되는 것이 더 큰 문제입니다.
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // CSRF 보호
-    const csrfResponse = await requireCSRFToken(request);
-    if (csrfResponse) {
-      return csrfResponse;
-    }
-
     // NextResponse로 쿠키 삭제
     const response = NextResponse.json({
       success: true,

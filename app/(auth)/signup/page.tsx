@@ -1,7 +1,7 @@
 // app/(auth)/signup/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signUp } from '@/lib/auth';
@@ -9,9 +9,11 @@ import { translateAuthError } from '@/lib/auth-errors';
 import { getFirestoreInstance } from '@/lib/firebase/client';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignupPage() {
   const { t } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -20,6 +22,13 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  // ✅ 이미 로그인한 사용자는 dashboard로 리다이렉트 (useEffect 사용)
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [authLoading, user, router]);
 
   // 유효성 검사
   const validateForm = (): string | null => {

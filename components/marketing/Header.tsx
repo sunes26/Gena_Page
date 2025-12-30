@@ -18,9 +18,12 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await logout();
+      // 로그아웃 성공 후 홈으로 리다이렉트 (강제 새로고침)
       window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
+      // 에러 발생 시에도 로컬 상태 초기화를 위해 홈으로 리다이렉트
+      // Firebase Auth는 이미 로그아웃되었을 가능성이 높음
       window.location.href = '/';
     }
   };
