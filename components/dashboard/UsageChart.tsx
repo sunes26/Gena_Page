@@ -189,20 +189,20 @@ export default function UsageChart({
   const weeklyData = data.slice(-7).map((stat) => {
     const date = new Date(stat.date);
     const dayName = locale === 'ko'
-      ? date.toLocaleDateString('ko-KR', { 
+      ? date.toLocaleDateString('ko-KR', {
           month: 'short',
           day: 'numeric',
-          weekday: 'short' 
+          weekday: 'short'
         })
-      : date.toLocaleDateString('en-US', { 
+      : date.toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric'
         });
-    
+
     return {
       date: stat.date,
       label: dayName,
-      count: stat.count || 0,
+      count: stat.total_count || stat.count || 0, // ✅ total_count 사용
     };
   });
 
@@ -215,11 +215,11 @@ export default function UsageChart({
     const weekStart = new Date(date);
     weekStart.setDate(date.getDate() - date.getDay());
     const weekKey = weekStart.toISOString().split('T')[0];
-    
+
     if (!groupedByWeek[weekKey]) {
       groupedByWeek[weekKey] = 0;
     }
-    groupedByWeek[weekKey] += stat.count || 0;
+    groupedByWeek[weekKey] += stat.total_count || stat.count || 0; // ✅ total_count 사용
   });
 
   Object.keys(groupedByWeek).sort().forEach((weekKey) => {

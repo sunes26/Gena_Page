@@ -23,7 +23,8 @@
       "Bash(mkdir:*)",
       "Bash(git commit:*)",
       "Bash(certutil -hashfile:*)",
-      "Bash(certutil:*)"
+      "Bash(certutil:*)",
+      "Bash(npm run dev:*)"
     ]
   }
 }

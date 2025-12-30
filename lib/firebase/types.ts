@@ -23,14 +23,20 @@ export interface HistoryDocument {
 
 /**
  * Daily 컬렉션 문서 타입
+ * ✅ Firestore 실제 구조에 맞춤
  */
 export interface DailyDocument {
   id?: string;
   userId: string;
   date: string; // YYYY-MM-DD
-  count: number;
+  summary_count: number; // 요약 횟수
+  question_count: number; // 질문 횟수
+  total_count: number; // 총 횟수 (summary + question)
   isPremium: boolean;
   createdAt: Timestamp;
+  updatedAt: Timestamp;
+  // ✅ 하위 호환성 (기존 코드에서 count 사용)
+  count?: number;
 }
 
 /**

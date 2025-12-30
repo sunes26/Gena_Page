@@ -79,6 +79,14 @@ export function useUsageStats(
           ...doc.data(),
         })) as DailyDocument[];
 
+        console.log('✅ Firestore query results:', {
+          userId,
+          startDate: actualStartDate,
+          endDate: actualEndDate,
+          resultCount: results.length,
+          results: results.map(r => ({ date: r.date, count: r.count })),
+        });
+
         return results;
       } catch (err) {
         console.error('❌ Failed to load daily stats:', err);
@@ -103,13 +111,15 @@ export function useUsageStats(
   const dailyStats = data || [];
 
   // 주간 합계 (최근 7일)
+  // ✅ total_count 사용 (summary_count + question_count)
   const weeklyTotal = dailyStats
     .slice(-7)
-    .reduce((sum, stat) => sum + (stat.count || 0), 0);
+    .reduce((sum, stat) => sum + (stat.total_count || stat.count || 0), 0);
 
   // 월간 합계 (전체 기간)
+  // ✅ total_count 사용 (summary_count + question_count)
   const monthlyTotal = dailyStats.reduce(
-    (sum, stat) => sum + (stat.count || 0),
+    (sum, stat) => sum + (stat.total_count || stat.count || 0),
     0
   );
 
@@ -153,8 +163,16 @@ export function useMonthlyUsage(userId: string | null) {
 export function useRecentUsage(userId: string | null, days: number = 7) {
   const endDate = formatDate(new Date());
   const startDate = formatDate(
-    new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000) // ✅ 오늘 포함하여 7일
   );
+
+  console.log('🔍 useRecentUsage Debug:', {
+    userId,
+    days,
+    startDate,
+    endDate,
+    range: `${startDate} to ${endDate}`,
+  });
 
   return useUsageStats(userId, { startDate, endDate });
 }
