@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signUp } from '@/lib/auth';
 import { translateAuthError } from '@/lib/auth-errors';
-import { getFirestoreInstance } from '@/lib/firebase/client';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ensureUserProfile } from '@/lib/firebase/client-queries';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -52,26 +51,6 @@ export default function SignupPage() {
     return null;
   };
 
-  // users 컬렉션에 문서 생성
-  const createUserProfile = async (userId: string, userEmail: string, userName?: string) => {
-    try {
-      const db = getFirestoreInstance();
-      const userRef = doc(db, 'users', userId);
-      
-      await setDoc(userRef, {
-        email: userEmail,
-        name: userName || null,
-        isPremium: false,
-        subscriptionPlan: 'free',
-        emailVerified: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error('Failed to create user profile:', error);
-    }
-  };
-
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -86,9 +65,15 @@ export default function SignupPage() {
 
     try {
       const userCredential = await signUp(email, password, displayName || undefined);
-      const userId = userCredential.user.uid;
 
-      await createUserProfile(userId, email, displayName);
+      // ✅ 사용자 프로필 생성 (emailVerified는 회원가입 직후이므로 false)
+      await ensureUserProfile(
+        userCredential.user.uid,
+        email,
+        false, // 회원가입 직후는 항상 false
+        displayName || undefined,
+        null
+      );
 
       router.push('/verify-email?email=' + encodeURIComponent(email));
     } catch (error) {

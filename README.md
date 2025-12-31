@@ -738,6 +738,9 @@ app/(auth)/login/
 - ✅ 결제 수단 변경
 - ✅ Webhook 이벤트 처리
 - ✅ 구독 상태 동기화
+- ✅ **일일 사용량 제한 시스템** (3회/일)
+- ✅ **실시간 사용량 추적** (5초 자동 갱신)
+- ✅ **구독 가격 표준화** ($9.99/월)
 
 ### 다국어 (i18n)
 - ✅ 한국어 (기본)
@@ -1335,8 +1338,8 @@ app/
 
 ---
 
-**Last Updated:** 2025년 12월 16일
-**Version:** 2.3.0
+**Last Updated:** 2025년 12월 30일
+**Version:** 2.4.0
 **Status:** 🚀 Active Development + Production Ready
 
 ---
@@ -1531,6 +1534,34 @@ function isValidData(data: unknown): data is ExpectedType {
 ---
 
 ## 📜 변경 이력
+
+### v2.4.0 (2025-12-30) 💎 **Usage Limits & Subscription Enhancement**
+- 📊 **사용량 제한 시스템 개선**
+  - 월간 30회 제한 → 일일 3회 제한으로 변경
+  - `FREE_DAILY_LIMIT` 상수 추가
+  - `useTodayUsage` 훅 구현 (5초 자동 갱신)
+  - 실시간 사용량 추적 및 진행바 표시
+- 💰 **구독 가격 표준화**
+  - 기본 통화를 KRW에서 USD로 변경
+  - 구독 가격: $9.99/월로 통일
+  - 다국어 가격 표시 통일 (한국어도 $9.99 표시)
+- ✨ **구독 페이지 UI/UX 개선**
+  - 오늘 사용량 표시 강조 (X / 3회)
+  - 사용량 진행바 추가 (시각적 피드백)
+  - 월간 총 사용량 부가 정보로 표시
+  - 일일 제한 도달 시 업그레이드 안내
+- 🎯 **제한사항 및 혜택 항목 재구성**
+  - 제한사항: 광고 표시 제거 → PDF 요약 불가, 요약 기록 저장 불가 추가
+  - Pro 혜택: 광고 제거 제거 → PDF 요약, 요약 기록 저장 추가
+  - 각 항목 개별 표시 (limitation4, benefit5 추가)
+- 🌐 **다국어 지원 강화**
+  - 한국어/영어 제한사항 및 혜택 문구 업데이트
+  - 일일 제한 관련 문구 추가
+  - 일관된 용어 사용
+- 🔧 **코드 구조 개선**
+  - `lib/constants.ts`에 사용량 제한 상수 중앙 관리
+  - 하위 호환성 유지 (`FREE_MONTHLY_LIMIT` deprecated)
+  - TypeScript 타입 안정성 향상
 
 ### v2.3.0 (2025-12-16) 🚀 **Major Performance & Security Update**
 - ⚡ **대규모 성능 최적화 완료** (11개 주요 개선)

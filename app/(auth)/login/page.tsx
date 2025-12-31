@@ -8,8 +8,7 @@ import { signInWithEmail, createSession } from '@/lib/auth';
 import { getAuthErrorKey, getAuthErrorType, type AuthErrorType } from '@/lib/auth-errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirestoreInstance } from '@/lib/firebase/client';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ensureUserProfile } from '@/lib/firebase/client-queries';
 import DynamicMeta from '@/components/seo/DynamicMeta';
 
 // 에러 타입에 따른 아이콘 컴포넌트
@@ -100,28 +99,6 @@ function LoginFormContent() {
     setErrorType('unknown');
   };
 
-  const ensureUserProfile = async (userId: string, userEmail: string, userName?: string) => {
-    try {
-      const db = getFirestoreInstance();
-      const userRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        await setDoc(userRef, {
-          email: userEmail,
-          name: userName || null,
-          isPremium: false,
-          subscriptionPlan: 'free',
-          emailVerified: true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      }
-    } catch (error) {
-      console.error('Failed to ensure user profile:', error);
-    }
-  };
-
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -143,11 +120,26 @@ function LoginFormContent() {
 
     try {
       const userCredential = await signInWithEmail(email, password);
+
+      // ✅ 최신 사용자 정보 가져오기 (이메일 인증 상태 포함)
+      await userCredential.user.reload();
+
       const userId = userCredential.user.uid;
       const userEmail = userCredential.user.email || '';
+      const emailVerified = userCredential.user.emailVerified; // ✅ Firebase Auth의 최신 값
       const userName = userCredential.user.displayName || undefined;
+      const photoURL = userCredential.user.photoURL || undefined;
 
-      await ensureUserProfile(userId, userEmail, userName);
+      // 🔍 디버깅: Firebase Auth 상태 확인
+      console.log('🔐 Login - Firebase Auth state:', {
+        userId,
+        email: userEmail,
+        emailVerified,
+        displayName: userName,
+      });
+
+      // ✅ Firebase Auth의 emailVerified 값을 전달
+      await ensureUserProfile(userId, userEmail, emailVerified, userName, photoURL);
 
       const idToken = await userCredential.user.getIdToken();
       await createSession(idToken);

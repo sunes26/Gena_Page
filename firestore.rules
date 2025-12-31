@@ -294,15 +294,20 @@ service cloud.firestore {
              // id, createdAt 변경 불가
              newData.id == oldData.id &&
              newData.createdAt == oldData.createdAt &&
-             // email 변경 불가 (Firebase Auth에서 관리)
-             newData.email == oldData.email &&
+             // ✅ email은 Firebase Auth와 동기화 허용 (Firebase Auth의 이메일과 일치해야 함)
+             newData.email == request.auth.token.email &&
+             // ✅ emailVerified 업데이트 허용 (Firebase Auth와 동기화)
+             (!newData.keys().hasAny(['emailVerified']) || newData.emailVerified is bool) &&
              // updatedAt 필수 (과거보다 미래여야 함)
              newData.keys().hasAny(['updatedAt']) &&
              newData.updatedAt is timestamp &&
              (!oldData.keys().hasAny(['updatedAt']) ||
               newData.updatedAt > oldData.updatedAt) &&
              // role 변경 불가 (관리자만 가능)
-             (newData.role == oldData.role || request.auth.token.admin == true) &&
+             (!newData.keys().hasAny(['role']) ||
+              !oldData.keys().hasAny(['role']) ||
+              newData.role == oldData.role ||
+              request.auth.token.admin == true) &&
              // isPremium 변경 불가 (관리자 또는 서버만 가능)
              (!newData.keys().hasAny(['isPremium']) ||
               newData.isPremium == oldData.isPremium ||

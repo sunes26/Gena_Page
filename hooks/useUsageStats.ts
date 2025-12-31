@@ -8,6 +8,8 @@ import {
   where,
   orderBy,
   getDocs,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { getFirestoreInstance } from '@/lib/firebase/client';
 import { DailyDocument } from '@/lib/firebase/types';
@@ -211,4 +213,57 @@ export function useMonthUsage(
 export function useCurrentMonthlyUsage() {
   const { user } = useAuth();
   return useMonthlyUsage(user?.uid || null);
+}
+
+/**
+ * 오늘 사용량을 조회하는 훅
+ * ✅ 서브컬렉션 구조: /users/{userId}/daily/{today}
+ */
+export function useTodayUsage(userId: string | null) {
+  const today = formatDate(new Date());
+
+  const { data, error } = useSWR(
+    userId ? ['today-usage', userId, today] : null,
+    async () => {
+      if (!userId) {
+        return { total: 0, summary: 0, question: 0 };
+      }
+
+      try {
+        const db = getFirestoreInstance();
+        const dailyDocRef = doc(db, 'users', userId, 'daily', today);
+        const dailyDoc = await getDoc(dailyDocRef);
+
+        if (!dailyDoc.exists()) {
+          return { total: 0, summary: 0, question: 0 };
+        }
+
+        const data = dailyDoc.data();
+        return {
+          total: data.total_count || 0,
+          summary: data.summary_count || 0,
+          question: data.question_count || 0,
+        };
+      } catch (err) {
+        console.error('❌ Failed to load today usage:', err);
+        throw err;
+      }
+    },
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 5000, // 5초마다 자동 갱신
+      onError: (err) => {
+        console.error('❌ SWR error in useTodayUsage:', err);
+      },
+    }
+  );
+
+  return {
+    total: data?.total || 0,
+    summary: data?.summary || 0,
+    question: data?.question || 0,
+    loading: !data && !error,
+    error: error || null,
+  };
 }

@@ -29,17 +29,19 @@ export interface ClientQueryResult<T> {
 /**
  * ✅ NEW: 사용자 프로필 문서 생성/업데이트 (없을 경우에만 생성)
  * 로그인 시 AuthContext에서 자동 호출
- * 
+ *
  * @param userId - Firebase Auth UID
  * @param email - 사용자 이메일
+ * @param emailVerified - Firebase Auth의 이메일 인증 상태
  * @param displayName - 표시 이름 (선택사항)
  * @param photoURL - 프로필 사진 URL (선택사항)
- * 
+ *
  * @returns Promise<void>
  */
 export async function ensureUserProfile(
   userId: string,
   email: string,
+  emailVerified: boolean,
   displayName?: string | null,
   photoURL?: string | null
 ): Promise<void> {
@@ -58,29 +60,58 @@ export async function ensureUserProfile(
         name: displayName || email.split('@')[0],
         isPremium: false,
         subscriptionPlan: 'free',
-        emailVerified: false, // 초기값 false, Firebase Auth에서 확인 후 업데이트
+        emailVerified, // ✅ Firebase Auth의 실제 값 사용
         photoURL: photoURL || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
     } else {
       // 3. 기존 문서가 있어도 일부 필드는 업데이트 (선택사항)
-      // 예: displayName이나 photoURL이 변경되었을 수 있음
+      // 예: email, displayName, photoURL, emailVerified가 변경되었을 수 있음
       const currentData = userDoc.data();
-      const needsUpdate = 
+
+      // 🔍 디버깅: 현재 Firestore 데이터와 Firebase Auth 데이터 비교
+      console.log('📊 ensureUserProfile - Comparing data:', {
+        firestore: {
+          email: currentData.email,
+          emailVerified: currentData.emailVerified,
+          name: currentData.name,
+        },
+        firebaseAuth: {
+          email,
+          emailVerified,
+          name: displayName,
+        },
+      });
+
+      const needsUpdate =
+        (currentData.email !== email) || // ✅ 이메일 변경 확인
         (displayName && currentData.name !== displayName) ||
-        (photoURL && currentData.photoURL !== photoURL);
+        (photoURL && currentData.photoURL !== photoURL) ||
+        (currentData.emailVerified !== emailVerified); // ✅ emailVerified도 동기화
 
       if (needsUpdate) {
+        console.log('✅ Updating Firestore user profile:', {
+          email,
+          emailVerified,
+          name: displayName || currentData.name,
+        });
+
         await setDoc(
           userDocRef,
           {
+            email, // ✅ Firebase Auth의 최신 이메일과 동기화
             name: displayName || currentData.name,
             photoURL: photoURL || currentData.photoURL,
+            emailVerified, // ✅ Firebase Auth와 동기화
             updatedAt: serverTimestamp(),
           },
           { merge: true } // 기존 데이터 유지하면서 병합
         );
+
+        console.log('✅ Firestore user profile updated successfully');
+      } else {
+        console.log('ℹ️ No update needed - Firestore already in sync');
       }
     }
   } catch (error) {

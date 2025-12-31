@@ -27,7 +27,8 @@ export const SUBSCRIPTION_STATUS = {
  * 사용량 제한 상수
  */
 export const USAGE_LIMITS = {
-  FREE_MONTHLY_LIMIT: 3, // 무료 플랜 월간 요약 제한
+  FREE_DAILY_LIMIT: 3, // 무료 플랜 일일 요약 제한
+  FREE_MONTHLY_LIMIT: 3, // ✅ 하위 호환성 유지 (deprecated)
   WARNING_THRESHOLD: 0.66, // 66% 사용 시 경고 (2/3)
 } as const;
 

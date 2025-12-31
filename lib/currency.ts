@@ -96,16 +96,18 @@ export interface PriceInfo {
 
 /**
  * ✅ 기본 가격 정보 (환경 변수에서 가져오거나 기본값 사용)
+ * USD는 센트 단위로 저장 (999 = $9.99)
+ * KRW는 실제 금액 그대로 저장 (9900 = ₩9,900)
  */
 export const DEFAULT_PRICES: Record<string, PriceInfo> = {
   pro_monthly: {
-    amount: parseInt(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? '990000', 10), // ₩9,900
-    currency: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY ?? 'KRW',
+    amount: parseInt(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? '999', 10), // $9.99 (999 cents)
+    currency: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY ?? 'USD',
     interval: 'month',
   },
   pro_yearly: {
-    amount: parseInt(process.env.NEXT_PUBLIC_PRO_YEARLY_PRICE ?? '9900000', 10), // ₩99,000
-    currency: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY ?? 'KRW',
+    amount: parseInt(process.env.NEXT_PUBLIC_PRO_YEARLY_PRICE ?? '9900', 10), // $99.00 (9900 cents)
+    currency: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY ?? 'USD',
     interval: 'year',
   },
 };

@@ -13,7 +13,7 @@ interface UsageWarningBannerProps {
 
 export default function UsageWarningBanner({
   currentUsage,
-  limit = USAGE_LIMITS.FREE_MONTHLY_LIMIT,
+  limit = USAGE_LIMITS.FREE_DAILY_LIMIT,
 }: UsageWarningBannerProps) {
   const [dismissed, setDismissed] = useState(false);
 
@@ -57,8 +57,8 @@ export default function UsageWarningBanner({
             }`}
           >
             {isLimitReached
-              ? '⚠️ 이번 달 무료 요약 한도를 모두 사용했습니다'
-              : `⚠️ 이번 달 무료 요약 ${remaining}개 남았습니다`}
+              ? '⚠️ 오늘 무료 요약 한도를 모두 사용했습니다'
+              : `⚠️ 오늘 무료 요약 ${remaining}회 남았습니다`}
           </h3>
           <p
             className={`text-sm ${
@@ -67,13 +67,13 @@ export default function UsageWarningBanner({
           >
             {isLimitReached ? (
               <>
-                무료 플랜은 월 {limit}개 요약으로 제한됩니다.
+                무료 플랜은 일 {limit}회 요약으로 제한됩니다.
                 <br />
                 <strong>Pro 플랜으로 업그레이드</strong>하면 무제한으로 요약을 생성할 수 있습니다.
               </>
             ) : (
               <>
-                무료 플랜은 월 {limit}개 요약으로 제한됩니다. 현재 <strong>{currentUsage}/{limit}개</strong> 사용 중입니다.
+                무료 플랜은 일 {limit}회 요약으로 제한됩니다. 현재 <strong>{currentUsage}/{limit}회</strong> 사용 중입니다.
                 <br />
                 Pro 플랜으로 업그레이드하면 무제한으로 요약을 생성할 수 있습니다.
               </>

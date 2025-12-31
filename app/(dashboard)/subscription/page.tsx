@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useCurrentMonthlyUsage } from '@/hooks/useUsageStats';
+import { useCurrentMonthlyUsage, useTodayUsage } from '@/hooks/useUsageStats';
 import { PaddleCheckout } from '@/components/payment/PaddleCheckout';
 import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast-helpers';
 import { getIdToken } from '@/lib/auth';
@@ -19,20 +19,21 @@ export default function SubscriptionPage() {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
-  
-  const { isPremium: isPremiumFromUsers, loading: authLoading } = useAuth();
-  
-  const { 
-    subscription, 
-    isPro, 
+
+  const { isPremium: isPremiumFromUsers, loading: authLoading, user } = useAuth();
+
+  const {
+    subscription,
+    isPro,
     isActive,
     isPastDue,
     cancelScheduled,
     daysUntilRenewal,
-    loading: subscriptionLoading 
+    loading: subscriptionLoading
   } = useSubscription();
 
   const { total: monthlyTotal, loading: usageLoading } = useCurrentMonthlyUsage();
+  const { total: todayTotal, loading: todayLoading } = useTodayUsage(user?.uid || null);
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [canceling, setCanceling] = useState(false);
@@ -266,7 +267,7 @@ export default function SubscriptionPage() {
   };
 
   // ✅ 로딩 상태 - 스켈레톤 UI로 개선
-  if (authLoading || subscriptionLoading || usageLoading) {
+  if (authLoading || subscriptionLoading || usageLoading || todayLoading) {
     return (
       <div className="space-y-6">
         {/* 헤더 스켈레톤 */}
@@ -406,27 +407,30 @@ export default function SubscriptionPage() {
             </p>
           </div>
 
-          {/* 이번 달 사용량 */}
+          {/* 오늘 사용량 */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">
-                {t('subscription.free.usageTitle')}
+                오늘 사용량
               </span>
               <span className="text-lg font-bold text-gray-900">
-                {t('subscription.free.usageLimit', { current: monthlyTotal, limit: USAGE_LIMITS.FREE_MONTHLY_LIMIT })}
+                {todayTotal} / {USAGE_LIMITS.FREE_DAILY_LIMIT}회
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min((monthlyTotal / USAGE_LIMITS.FREE_MONTHLY_LIMIT) * 100, 100)}%` }}
+                style={{ width: `${Math.min((todayTotal / USAGE_LIMITS.FREE_DAILY_LIMIT) * 100, 100)}%` }}
               />
             </div>
-            {monthlyTotal >= USAGE_LIMITS.FREE_MONTHLY_LIMIT && (
+            {todayTotal >= USAGE_LIMITS.FREE_DAILY_LIMIT && (
               <p className="text-sm text-red-600 mt-2">
-                {t('subscription.free.usageFull')}
+                오늘의 무료 사용 횟수를 모두 사용했습니다. Pro로 업그레이드하여 무제한으로 이용하세요!
               </p>
             )}
+            <p className="text-xs text-gray-500 mt-2">
+              이번 달 총 사용량: {monthlyTotal}회
+            </p>
           </div>
 
           {/* 제한사항 */}
@@ -444,6 +448,10 @@ export default function SubscriptionPage() {
               <li className="flex items-start gap-2">
                 <span className="text-red-500 mt-0.5">✗</span>
                 <span>{t('subscription.free.limitation3')}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-red-500 mt-0.5">✗</span>
+                <span>{t('subscription.free.limitation4')}</span>
               </li>
             </ul>
           </div>
@@ -469,6 +477,10 @@ export default function SubscriptionPage() {
               <li className="flex items-start gap-2">
                 <span className="text-green-600 mt-0.5">✓</span>
                 <span className="font-medium">{t('subscription.free.benefit4')}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 mt-0.5">✓</span>
+                <span className="font-medium">{t('subscription.free.benefit5')}</span>
               </li>
             </ul>
           </div>
@@ -576,6 +588,10 @@ export default function SubscriptionPage() {
               <li className="flex items-start gap-2">
                 <span className="text-green-600 mt-0.5">✓</span>
                 <span>{t('subscription.pro.benefit4')}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 mt-0.5">✓</span>
+                <span>{t('subscription.pro.benefit5')}</span>
               </li>
             </ul>
           </div>

@@ -14,6 +14,7 @@ import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  verifyBeforeUpdateEmail,
 } from 'firebase/auth';
 import { getAuthInstance } from './firebase/client';
 import { uploadProfilePhoto as uploadPhoto } from './firebase/storage';
@@ -245,9 +246,10 @@ export async function reauthenticateUser(
 }
 
 /**
- * 이메일 변경
- * - 재인증이 필요할 수 있음
- * 
+ * 이메일 변경 (verifyBeforeUpdateEmail 사용)
+ * - 새 이메일로 인증 링크를 보내고, 사용자가 링크를 클릭하면 이메일이 변경됨
+ * - 더 안전한 방식 (새 이메일 소유권 확인)
+ *
  * @param newEmail - 새 이메일 주소
  * @param currentPassword - 현재 비밀번호 (재인증용)
  */
@@ -263,14 +265,16 @@ export async function updateUserEmail(
   }
 
   try {
-    // 1. 재인증
+    // 1. 재인증 (보안을 위해 필수)
     await reauthenticateUser(currentPassword);
 
-    // 2. 이메일 업데이트
-    await updateEmail(user, newEmail);
-
-    // 3. 새 이메일로 인증 이메일 발송
-    await sendEmailVerification(user);
+    // 2. 새 이메일로 인증 링크 발송
+    // ✅ updateEmail 대신 verifyBeforeUpdateEmail 사용
+    // 사용자가 링크를 클릭하면 자동으로 이메일이 변경됨
+    await verifyBeforeUpdateEmail(user, newEmail, {
+      url: `${window.location.origin}/dashboard`, // 인증 후 돌아올 URL
+      handleCodeInApp: false,
+    });
   } catch (error: unknown) {
     // 에러 코드만 throw (번역은 클라이언트에서)
     if (error && typeof error === 'object' && 'code' in error) {

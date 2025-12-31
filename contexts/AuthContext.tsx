@@ -71,14 +71,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         auth,
         async (authUser) => {
           setUser(authUser);
-          
+
           // ✅ 로그인한 사용자가 있으면 프로필 생성/업데이트 후 실시간 리스너 설정
           if (authUser) {
             try {
+              // ✅ 0. 최신 사용자 정보 가져오기 (이메일 인증 상태 포함)
+              await authUser.reload();
+
+              // 🔍 디버깅: AuthContext - Firebase Auth 상태
+              console.log('🔐 AuthContext - Firebase Auth state after reload:', {
+                uid: authUser.uid,
+                email: authUser.email,
+                emailVerified: authUser.emailVerified,
+                displayName: authUser.displayName,
+              });
+
               // ✅ 1. 사용자 프로필 생성 (없을 경우에만)
               await ensureUserProfile(
                 authUser.uid,
                 authUser.email!,
+                authUser.emailVerified, // ✅ Firebase Auth의 최신 이메일 인증 상태 전달
                 authUser.displayName,
                 authUser.photoURL
               );
@@ -171,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ✅ 계산된 값들
   const isPremium = userProfile?.isPremium || false;
   const subscriptionPlan = userProfile?.subscriptionPlan || 'free';
-  const emailVerified = user?.emailVerified || false;
+  const emailVerified = userProfile?.emailVerified || false; // ✅ Firestore의 값 사용
 
   const value: AuthContextType = {
     user,

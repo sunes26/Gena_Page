@@ -8,6 +8,7 @@ import { updateUserProfile } from '@/lib/auth';
 import { showSuccess, showError } from '@/lib/toast-helpers';
 import { translateAuthError } from '@/lib/auth-errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProfileSettingsProps {
   user: User;
@@ -16,6 +17,7 @@ interface ProfileSettingsProps {
 
 export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps) {
   const { t, locale, setLocale } = useTranslation();
+  const { emailVerified } = useAuth(); // ✅ Firestore의 emailVerified 사용
   
   // 프로필 정보 상태
   const [displayName, setDisplayName] = useState(user.displayName || '');
@@ -117,7 +119,7 @@ export default function ProfileSettings({ user, onUpdate }: ProfileSettingsProps
               {t('settings.profile.emailVerificationLabel')}
             </label>
             <div className="flex items-center space-x-2">
-              {user.emailVerified ? (
+              {emailVerified ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   ✓ {t('settings.profile.verified')}
                 </span>
